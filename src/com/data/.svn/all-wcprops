@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/50/trunk/3d-map-editor/src/com/data
+END
+GameObjectLoc.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/50/trunk/3d-map-editor/src/com/data/GameObjectLoc.java
+END
+NpcLoc.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/50/trunk/3d-map-editor/src/com/data/NpcLoc.java
+END
+ItemLoc.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/50/trunk/3d-map-editor/src/com/data/ItemLoc.java
+END

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/50/trunk/3d-map-editor/xml
+END
+npc.txt
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/50/trunk/3d-map-editor/xml/npc.txt
+END
+item.txt
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/50/trunk/3d-map-editor/xml/item.txt
+END
+objects.txt
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/50/trunk/3d-map-editor/xml/objects.txt
+END
+NpcLoc.xml.gz
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/50/trunk/3d-map-editor/xml/NpcLoc.xml.gz
+END
+GameObjectLoc.xml.gz
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/51/trunk/3d-map-editor/xml/GameObjectLoc.xml.gz
+END
+ItemLoc.xml.gz
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/50/trunk/3d-map-editor/xml/ItemLoc.xml.gz
+END

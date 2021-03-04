@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="xml"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/Pets/Desktop/Eclipse/DarkQuest Server &amp; Loginserver/3D_editor/lib/xpp3.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/Pets/Desktop/Eclipse/DarkQuest Server &amp; Loginserver/3D_editor/lib/xstream.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

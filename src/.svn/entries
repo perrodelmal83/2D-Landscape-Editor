@@ -1,0 +1,34 @@
+9
+
+dir
+50
+https://3d-map-editor.googlecode.com/svn/trunk/3d-map-editor/src
+https://3d-map-editor.googlecode.com/svn
+
+
+
+2009-01-18T01:31:10.448640Z
+50
+peeter_tomberg@hotmail.com
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+7476b05a-ccef-11dd-bc61-0ff7aae23933
+
+com
+dir
+
+resources
+dir
+

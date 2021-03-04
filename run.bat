@@ -1,0 +1,1 @@
+java -cp lib/xstream.jar;lib/xpp3.jar;mapeditor.jar com.GUI
