@@ -23,26 +23,26 @@ public class ItemLoc {
     public int respawnTime;
 
     public String getName() {
-	return com.Util.itemNames.get(this.getId());
+        return com.Util.itemNames.get(this.getId());
     }
 
     public int getId() {
-	return id;
+        return id;
     }
 
     public int getX() {
-	return x;
+        return x;
     }
 
     public int getY() {
-	return y;
+        return y;
     }
 
     public int getAmount() {
-	return amount;
+        return amount;
     }
 
     public int getRespawnTime() {
-	return respawnTime;
+        return respawnTime;
     }
 }

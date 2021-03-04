@@ -23,34 +23,34 @@ public class GameObjectLoc {
     public int type;
 
     public GameObjectLoc(int id, int x, int y, int direction, int type) {
-	this.id = id;
-	this.x = x;
-	this.y = y;
-	this.direction = direction;
-	this.type = type;
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+        this.type = type;
     }
 
     public int getId() {
-	return id;
+        return id;
     }
 
     public int getX() {
-	return x;
+        return x;
     }
 
     public String getName() {
-	return com.Util.objectNames.get(this.getId());
+        return com.Util.objectNames.get(this.getId());
     }
 
     public int getY() {
-	return y;
+        return y;
     }
 
     public int getDirection() {
-	return direction;
+        return direction;
     }
 
     public int getType() {
-	return type;
+        return type;
     }
 }
