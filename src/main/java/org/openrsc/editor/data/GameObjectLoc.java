@@ -1,4 +1,6 @@
-package com.data;
+package org.openrsc.editor.data;
+
+import org.openrsc.editor.Util;
 
 public class GameObjectLoc {
     /**
@@ -39,7 +41,7 @@ public class GameObjectLoc {
     }
 
     public String getName() {
-        return com.Util.objectNames.get(this.getId());
+        return Util.objectNames.get(this.getId());
     }
 
     public int getY() {

@@ -1,18 +1,13 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import org.openrsc.editor.data.GameObjectLoc;
+import org.openrsc.editor.data.ItemLoc;
+import org.openrsc.editor.data.NpcLoc;
+
+import java.awt.*;
 import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import com.data.GameObjectLoc;
-import com.data.ItemLoc;
-import com.data.NpcLoc;
 
 /**
  * @author xEnt/Vrunk/Peter the Properties/values that each RSC Tile holds.
@@ -347,7 +342,7 @@ public class Tile {
         }
 
         // Objects (Cyan)
-        if (GUI.hideNpcs.getText().equals("Hide Npcs/Objects/Items")) {
+        if (Util.showNpcs) {
             if (Util.objectCoordSet.get(Util.getRSCCoords(this)) != null) {
                 this.objectLoc = Util.objectCoordSet.get(Util.getRSCCoords(this));
                 int size = 8;
@@ -378,7 +373,7 @@ public class Tile {
         }
 
         // Roofs
-        if (Util.roofs && this.getRoofTexture() == (byte) 1) {
+        if (Util.showRoofs && this.getRoofTexture() == (byte) 1) {
             Canvas.offscreenGraphics.setColor(Color.ORANGE);
             Shape rec = new Rectangle(this.getX() + 1, this.getY(), Canvas.TILE_SIZE - 1, Canvas.TILE_SIZE - 1);
             Canvas.offscreenGraphics.draw(rec);

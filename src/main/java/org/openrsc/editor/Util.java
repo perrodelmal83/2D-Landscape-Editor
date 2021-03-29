@@ -1,7 +1,11 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.Color;
-import java.awt.Point;
+import org.openrsc.editor.data.GameObjectLoc;
+import org.openrsc.editor.data.ItemLoc;
+import org.openrsc.editor.data.NpcLoc;
+
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -11,16 +15,14 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-
-import javax.swing.JOptionPane;
-
-import com.data.GameObjectLoc;
-import com.data.ItemLoc;
-import com.data.NpcLoc;
 
 public class Util {
 
@@ -515,6 +517,14 @@ public class Util {
                 ((((Util.sectorY - 36) * 48) + t.getPosition() + 96) - 144) + (Util.sectorH * 944));
     }
 
+    public static void toggleShowNpcs() {
+        showNpcs = !showNpcs;
+    }
+
+    public static void toggleShowRoofs() {
+        showRoofs = !showRoofs;
+    }
+
     /**
      * the State of the Map editor.
      */
@@ -525,8 +535,8 @@ public class Util {
     public static HashMap<Integer, String> objectNames = new HashMap<>();
     public static HashMap<Integer, String> npcNames = new HashMap<>();
     public static HashMap<Integer, String> itemNames = new HashMap<>();
-    public static HashMap<Point, com.data.ItemLoc> itemCoordSet = new HashMap<>();
-    public static HashMap<Point, com.data.NpcLoc> npcCoordSet = new HashMap<>();
+    public static HashMap<Point, ItemLoc> itemCoordSet = new HashMap<>();
+    public static HashMap<Point, NpcLoc> npcCoordSet = new HashMap<>();
     public static HashMap<Point, GameObjectLoc> objectCoordSet = new HashMap<>();
     public static HashMap<Integer, Color> getDiagonalWallColorW = new HashMap<>();
     public static HashMap<Integer, Color> getDiagonalWallColorS = new HashMap<>();
@@ -554,7 +564,8 @@ public class Util {
     public static final int THREAD_DELAY = 4;
     public static String ourLandscapeFile = null;
     public static ByteBuffer ourData;
-    public static boolean roofs = false;
+    public static boolean showRoofs = false;
+    public static boolean showNpcs = true;
     public static ZipFile tileArchive;
     public static File ourFile = null;
     public static boolean MAP_BRIGHTNESS_LIGHT = false;

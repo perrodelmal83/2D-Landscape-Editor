@@ -1,27 +1,16 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import org.openrsc.editor.gui.menu.AdvancedMenu;
+import org.openrsc.editor.gui.menu.EditMenu;
+import org.openrsc.editor.gui.menu.FileMenu;
 
-import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.Timer;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author xEnt/Vrunk/Peter GUI designed with JFormDesigner. Some stuff done by
@@ -49,12 +38,8 @@ public class GUI {
         }
     }
 
-    private void menu1ActionPerformed(ActionEvent e) {
-        // TODO add your code here
-    }
-
     // Open Landscape.
-    private void menuItem1ActionPerformed(ActionEvent e) {
+    private void onOpenLandscape() {
         final JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Locate Landscape.rscd");
 
@@ -66,403 +51,135 @@ public class GUI {
 
     }
 
-    private void menuItem2ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onOpenSection() {
+        if (Util.tileArchive == null) {
+            return;
+        }
+        handleMove();
+        new SelectSection().setVisible(true);
     }
 
-    private void menuItem3ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onSaveLandscape() {
+        handleMove();
     }
 
-    private void menuItem4ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onRevertLandscape() {
+        if (Util.STATE == Util.State.RENDER_READY) {
+            Util.STATE = Util.State.CHANGING_SECTOR;
+        }
     }
 
-    private void menuItem5ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onExit() {
+        System.exit(0);
     }
 
-    private void menuItem6ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onUndo() {
+        //TODO: Implement this functionality
     }
 
-    private void menuItem7ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onCopy() {
+        Util.copiedTile = Util.selectedTile;
     }
 
-    private void menuItem8ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onPaste() {
+        if (Util.copiedTile != null) {
+            Util.selectedTile.setDiagonalWalls(Util.copiedTile.getDiagonalWalls());
+            Util.selectedTile.setVerticalWall(Util.copiedTile.getVerticalWall());
+            Util.selectedTile.setHorizontalWall(Util.copiedTile.getHorizontalWall());
+            Util.selectedTile.setGroundElevation(Util.copiedTile.getGroundElevation());
+            Util.selectedTile.setGroundTexture(Util.copiedTile.getGroundTexture());
+            Util.selectedTile.setRoofTexture(Util.copiedTile.getRoofTexture());
+            Util.selectedTile.setGroundOverlay(Util.copiedTile.getGroundOverlay());
+            Util.STATE = Util.State.TILE_NEEDS_UPDATING;
+        }
     }
 
-    private void menuItem9ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onShowUnderground() {
+        changeSectorHeight(SectorHeight.UNDERGROUND);
     }
 
-    private void menuItem13ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onShowGroundLevel() {
+        changeSectorHeight(SectorHeight.GROUND_FLOOR);
     }
 
-    private void menuItem14ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onShowUpstairs() {
+        changeSectorHeight(SectorHeight.UPSTAIRS);
     }
 
-    private void menuItem10ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    private void onShowSecondStory() {
+        changeSectorHeight(SectorHeight.SECOND_LEVEL);
     }
 
-    private void menuItem11ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    public void onJumpToCoords() {
+        Util.handleJumpToCoords();
     }
 
-    private void menuItem12ActionPerformed(ActionEvent e) {
-        // TODO add your code here
+    public CompletableFuture<Boolean> toggleShowNpcs() {
+        return attemptUpdate(Util::toggleShowNpcs).thenApply(unused -> Util.showNpcs);
+    }
+
+    public CompletableFuture<Void> attemptUpdate(Runnable task) {
+        return CompletableFuture.runAsync(() -> {
+            if (Util.STATE == Util.State.RENDER_READY) {
+                task.run();
+                Util.STATE = Util.State.FORCE_FULL_RENDER;
+            }
+        });
+    }
+
+    public CompletableFuture<Boolean> toggleShowRoofs() {
+        return attemptUpdate(Util::toggleShowRoofs).thenApply(unused -> Util.showRoofs);
+    }
+
+    private void changeSectorHeight(SectorHeight sectorHeight) {
+        int converted = sectorHeight.ordinal();
+        if (Util.sectorH != converted && Util.STATE == Util.State.RENDER_READY) {
+            Util.sectorH = converted;
+            Util.STATE = Util.State.CHANGING_SECTOR;
+        }
     }
 
     public static int[][] arr = new int[256][3];
 
     private void initComponents() throws Exception {
-
-        JMenuItem menuItem16 = new JMenuItem();
-        JMenuItem menuItem17 = new JMenuItem();
-        JMenuItem menuItem18 = new JMenuItem();
-        JMenuBar menuBar1 = new JMenuBar();
-        JMenu menu1 = new JMenu();
-        JMenuItem section = new JMenuItem();
-        JMenuItem menuItem1 = new JMenuItem();
-        JMenuItem menuItem2 = new JMenuItem();
-        JMenuItem menuItem3 = new JMenuItem();
-        JMenuItem menuItem4 = new JMenuItem();
-        JMenu menu2 = new JMenu();
-        JMenuItem menuItem5 = new JMenuItem();
-        JMenuItem menuItem6 = new JMenuItem();
-        JMenuItem menuItem7 = new JMenuItem();
-        menuItem8 = new JMenuItem();
-        JMenuItem menuItem9 = new JMenuItem();
-        JMenu menu3 = new JMenu();
-        JMenuItem menuItem13 = new JMenuItem();
-        JMenuItem menuItem14 = new JMenuItem();
-        JMenuItem menuItem10 = new JMenuItem();
-        JMenuItem menuItem11 = new JMenuItem();
-        JMenu menu6 = new JMenu();
-        JMenuItem menuItem12 = new JMenuItem();
         JPanel gamePanel = new JPanel();
         jframe = new JFrame();
-
-        // ======== this ========
         jframe.setBackground(Color.black);
         jframe.setResizable(false);
+
         Container contentPane = jframe.getContentPane();
-        // JSlider
-        // ======== menuBar1 ========
-        {
 
-            // ======== menu1 ========
-            {
-                menu1.setText("File");
-                menu1.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menu1ActionPerformed(e);
-                    }
-                });
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(
+                new FileMenu(
+                        this::onOpenLandscape,
+                        this::onOpenSection,
+                        this::onSaveLandscape,
+                        this::onRevertLandscape,
+                        this::onExit
+                )
+        );
 
-                // ---- menuItem1 ----
-                menuItem1.setText("Open Landscape");
-                menuItem1.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem1ActionPerformed(e);
-                    }
-                });
-                menu1.add(menuItem1);
+        menuBar.add(
+                new EditMenu(
+                        this::onUndo,
+                        this::onCopy,
+                        this::onPaste
+                )
+        );
 
-                // ---- section ----
-                section.setText("Open Section");
-                section.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.tileArchive == null) {
-                            return;
-                        }
-                        handleMove();
-                        new SelectSection().setVisible(true);
-                    }
-                });
-                menu1.add(section);
+        menuBar.add(
+                new AdvancedMenu(
+                        this::onShowUnderground,
+                        this::onShowGroundLevel,
+                        this::onShowUpstairs,
+                        this::onShowSecondStory,
+                        this::onJumpToCoords,
+                        this::toggleShowRoofs,
+                        this::toggleShowNpcs
+                )
+        );
 
-                // ---- menuItem2 ----
-                menuItem2.setText("Save Landscape");
-                menuItem2.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        handleMove();
-                    }
-                });
-                menu1.add(menuItem2);
-
-                // ---- menuItem3 ----
-                menuItem3.setText("Revert Landscape");
-                menuItem3.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem3ActionPerformed(e);
-                        if (Util.STATE == Util.State.RENDER_READY) {
-                            Util.STATE = Util.State.CHANGING_SECTOR;
-                        }
-                    }
-                });
-                menu1.add(menuItem3);
-
-                // ---- menuItem4 ----
-                menuItem4.setText("Exit");
-                menuItem4.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        System.exit(0);
-                    }
-                });
-                menu1.add(menuItem4);
-            }
-            menuBar1.add(menu1);
-
-            // ======== menu2 ========
-            {
-                menu2.setText("Edit");
-
-                // ---- menuItem5 ----
-                menuItem5.setText("Undo");
-                menuItem5.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem5ActionPerformed(e);
-                    }
-                });
-                // menu2.add(menuItem5);
-
-                // ---- menuItem6 ----
-                menuItem6.setText("--Unused--");
-                menuItem6.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        // Util.selectedTile.
-                    }
-                });
-                // menu2.add(menuItem6);
-
-                // ---- menuItem7 ----
-                menuItem7.setText("Copy Tile");
-                menuItem7.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        Util.copiedTile = Util.selectedTile;
-                        menuItem8.setEnabled(true);
-                    }
-                });
-                menu2.add(menuItem7);
-
-                // ---- menuItem8 ----
-                menuItem8.setText("Paste Tile");
-                menuItem8.setEnabled(false);
-                menuItem8.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.copiedTile != null) {
-                            Util.selectedTile.setDiagonalWalls(Util.copiedTile.getDiagonalWalls());
-                            Util.selectedTile.setVerticalWall(Util.copiedTile.getVerticalWall());
-                            Util.selectedTile.setHorizontalWall(Util.copiedTile.getHorizontalWall());
-                            Util.selectedTile.setGroundElevation(Util.copiedTile.getGroundElevation());
-                            Util.selectedTile.setGroundTexture(Util.copiedTile.getGroundTexture());
-                            Util.selectedTile.setRoofTexture(Util.copiedTile.getRoofTexture());
-                            Util.selectedTile.setGroundOverlay(Util.copiedTile.getGroundOverlay());
-                            Util.STATE = Util.State.TILE_NEEDS_UPDATING;
-                        }
-                    }
-                });
-                menu2.add(menuItem8);
-
-                // ---- menuItem9 ----
-                menuItem9.setText("--Unused--");
-                menuItem9.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem9ActionPerformed(e);
-                    }
-                });
-                // menu2.add(menuItem9);
-            }
-            menuBar1.add(menu2);
-
-            // ======== menu3 ========
-            {
-                menu3.setText("Brush");
-
-                // ---- menuItem13 ----
-                menuItem13.setText("Create Brush");
-                menuItem13.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem13ActionPerformed(e);
-                    }
-                });
-                menu3.add(menuItem13);
-
-                // ---- menuItem14 ----
-                menuItem14.setText("Delete Brush");
-                menuItem14.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem14ActionPerformed(e);
-                    }
-                });
-                menu3.add(menuItem14);
-
-                // ---- menuItem10 ----
-                menuItem10.setText("Save Brush");
-                menuItem10.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem10ActionPerformed(e);
-                    }
-                });
-                menu3.add(menuItem10);
-
-                // ---- menuItem11 ----
-                menuItem11.setText("Modify Brush");
-                menuItem11.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        menuItem11ActionPerformed(e);
-                    }
-                });
-                menu3.add(menuItem11);
-            }
-            // menuBar1.add(menu3);
-
-            // ======== menu6 ========
-            {
-                menu6.setText("Advanced");
-
-                // ---- menuItem12 ----
-                menuItem12.setText("Warp Underground");
-                menuItem12.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.sectorH != 3 && Util.STATE == Util.State.RENDER_READY) {
-                            Util.sectorH = 3;
-                            Util.STATE = Util.State.CHANGING_SECTOR;
-                        }
-                    }
-                });
-                menu6.add(menuItem12);
-
-                menuItem18.setText("Warp Mainland");
-                menuItem18.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.sectorH != 0 && Util.STATE == Util.State.RENDER_READY) {
-                            Util.sectorH = 0;
-                            Util.STATE = Util.State.CHANGING_SECTOR;
-
-                        }
-                    }
-                });
-
-                menu6.setText("Advanced");
-
-                // ---- menuItem12 ----
-                menuItem16.setText("Warp Upstairs");
-                menuItem16.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.sectorH != 1 && Util.STATE == Util.State.RENDER_READY) {
-                            Util.sectorH = 1;
-                            Util.STATE = Util.State.CHANGING_SECTOR;
-
-                        }
-                    }
-                });
-
-                menuItem17.setText("Warp 2nd Story");
-                menuItem17.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.sectorH != 2 && Util.STATE == Util.State.RENDER_READY) {
-                            Util.sectorH = 2;
-                            Util.STATE = Util.State.CHANGING_SECTOR;
-
-                        }
-                    }
-                });
-
-                jumpTo = new JMenuItem();
-                jumpTo.setText("Jump to Coordinates");
-                jumpTo.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        Util.handleJumpToCoords();
-
-
-                    }
-                });
-
-                roof = new JMenuItem();
-                roof.setText("Show Roofs");
-                roof.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.STATE == Util.State.RENDER_READY) {
-                            if (!Util.roofs) {
-                                Util.roofs = true;
-                                roof.setText("Hide Roofs");
-                            } else {
-                                Util.roofs = false;
-                                roof.setText("Show Roofs");
-                            }
-                            Util.STATE = Util.State.FORCE_FULL_RENDER;
-                        }
-
-                    }
-                });
-                hideNpcs = new JMenuItem();
-                hideNpcs.setText("Hide Npcs/Objects/Items");
-                hideNpcs.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.STATE == Util.State.RENDER_READY) {
-                            if (hideNpcs.getText().equals("Hide Npcs/Objects/Items")) {
-                                hideNpcs.setText("Show Npcs/Objects/Items");
-                            } else {
-                                hideNpcs.setText("Hide Npcs/Objects/Items");
-                            }
-                            Util.STATE = Util.State.FORCE_FULL_RENDER;
-                        }
-
-
-                    }
-                });
-
-                JMenuItem toggleInfo = new JMenuItem();
-                toggleInfo.setText("Toggle Tile Info");
-                toggleInfo.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (Util.STATE == Util.State.RENDER_READY && !GUI.tile.getText().equals("")) {
-                            if (!Util.toggleInfo) {
-                                Util.toggleInfo = true;
-                                GUI.tile.setText("");
-                                GUI.elevation.setText("");
-                                GUI.overlay.setText("");
-                                GUI.roofTexture.setText("");
-                                GUI.groundtexture.setText("");
-                                GUI.diagonalWall.setText("");
-                                GUI.verticalWall.setText("");
-                                GUI.horizontalWall.setText("");
-                                Util.updateText(Util.selectedTile);
-                            } else {
-                                Util.toggleInfo = false;
-                                GUI.tile.setText("");
-                                GUI.elevation.setText("");
-                                GUI.overlay.setText("");
-                                GUI.roofTexture.setText("");
-                                GUI.groundtexture.setText("");
-                                GUI.diagonalWall.setText("");
-                                GUI.verticalWall.setText("");
-                                GUI.horizontalWall.setText("");
-                                Util.updateText(Util.selectedTile);
-                            }
-                        }
-
-                    }
-                });
-
-                menu6.add(menuItem18);
-                menu6.add(menuItem16);
-                menu6.add(menuItem17);
-                menu6.add(jumpTo);
-                menu6.add(roof);
-                menu6.add(toggleInfo);
-                menu6.add(hideNpcs);
-
-            }
-            menuBar1.add(menu6);
-        }
         final JLabel temp4 = new JLabel();
         temp4.setVisible(true);
         temp4.setText("Texture: 0");
@@ -689,7 +406,7 @@ public class GUI {
 
             }
         });
-        jframe.setJMenuBar(menuBar1);
+        jframe.setJMenuBar(menuBar);
 
         // ======== GamePanel ========
         {
@@ -960,10 +677,6 @@ public class GUI {
         jframe.add(brushes);
 
         /********************************************/
-        menu1.getPopupMenu().setLightWeightPopupEnabled(false);
-        menu2.getPopupMenu().setLightWeightPopupEnabled(false);
-        menu3.getPopupMenu().setLightWeightPopupEnabled(false);
-        menu6.getPopupMenu().setLightWeightPopupEnabled(false);
         jframe.setTitle("RSC Landscape Editor");
         jframe.setLocationRelativeTo(jframe.getOwner());
         jframe.pack();
@@ -994,7 +707,6 @@ public class GUI {
         }
     }
 
-    public static JMenuItem roof;
     public static JLabel elevation;
     public static JLabel tile;
     public static JLabel diagonalWall;
@@ -1005,9 +717,7 @@ public class GUI {
     public static JLabel verticalWall;
     public static JComboBox brushes;
     public static JFrame jframe;
-    public static JMenuItem hideNpcs;
-    private JMenuItem menuItem8;
-    public static JMenuItem jumpTo;
+
     public static JSlider textureJS;
     public static JSlider diagonalWallJS;
     public static JSlider verticalWallJS;

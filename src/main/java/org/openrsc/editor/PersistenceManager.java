@@ -1,4 +1,6 @@
-package com;
+package org.openrsc.editor;
+
+import com.thoughtworks.xstream.XStream;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,15 +11,13 @@ import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.thoughtworks.xstream.XStream;
-
 public class PersistenceManager {
     private static final XStream xstream = new XStream();
 
     static {
-        addAlias("GameObjectLoc", "com.data.GameObjectLoc");
-        addAlias("NPCLoc", "com.data.NpcLoc");
-        addAlias("ItemLoc", "com.data.ItemLoc");
+        addAlias("GameObjectLoc", "org.openrsc.editor.data.GameObjectLoc");
+        addAlias("NPCLoc", "org.openrsc.editor.data.NpcLoc");
+        addAlias("ItemLoc", "org.openrsc.editor.data.ItemLoc");
     }
 
     private static void addAlias(String name, String className) {

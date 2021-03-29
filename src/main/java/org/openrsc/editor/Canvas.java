@@ -1,18 +1,11 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 /**
  * @author xEnt/Vrunk/Peter
