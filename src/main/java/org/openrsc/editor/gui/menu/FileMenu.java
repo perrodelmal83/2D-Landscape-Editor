@@ -1,13 +1,16 @@
 package org.openrsc.editor.gui.menu;
 
+import org.openrsc.editor.SelectSection;
 import org.openrsc.editor.gui.GuiUtils;
 
 import javax.swing.*;
+import java.io.File;
+import java.util.function.Consumer;
 
 public class FileMenu extends BaseMenu {
 
     public FileMenu(
-            Runnable onOpenLandscape,
+            Consumer<File> onOpenLandscape,
             Runnable onOpenSection,
             Runnable onSaveLandscape,
             Runnable onRevertLandscape,
@@ -17,7 +20,15 @@ public class FileMenu extends BaseMenu {
 
         JMenuItem openLandscape = new JMenuItem();
         openLandscape.setText("Open Landscape");
-        openLandscape.addActionListener(GuiUtils.fromRunnable(onOpenLandscape));
+        openLandscape.addActionListener(evt -> {
+            final JFileChooser fc = new JFileChooser();
+            fc.setDialogTitle("Locate Landscape.rscd");
+            if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                onOpenLandscape.accept(fc.getSelectedFile());
+                SelectSection ss = new SelectSection();
+                ss.setVisible(true);
+            }
+        });
         add(openLandscape);
 
         JMenuItem openSection = new JMenuItem();

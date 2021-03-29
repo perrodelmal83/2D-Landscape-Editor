@@ -3,23 +3,23 @@ package org.openrsc.editor;
 import org.openrsc.editor.data.GameObjectLoc;
 import org.openrsc.editor.data.ItemLoc;
 import org.openrsc.editor.data.NpcLoc;
+import org.openrsc.editor.gui.MainWindow;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Objects;
+import java.util.List;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -38,9 +38,9 @@ public class Util {
         final int x = mouseClick.x;
         final int y = mouseClick.y;
         if (inCanvas(mouseClick)) {
-            Point tileLocation = new Point(Canvas.GRID_SIZE - x / Canvas.TILE_SIZE, y / Canvas.TILE_SIZE);
+            Point tileLocation = new Point(EditorCanvas.GRID_SIZE - x / EditorCanvas.TILE_SIZE, y / EditorCanvas.TILE_SIZE);
             try {
-                return Canvas.tileGrid[tileLocation.x][tileLocation.y];
+                return EditorCanvas.tileGrid[tileLocation.x][tileLocation.y];
             } catch (Exception e) {
                 return null;
             }
@@ -90,10 +90,10 @@ public class Util {
      */
 
     public static boolean inCanvas(Point p) {
-        if (!GUI.jframe.isActive()) {
+        if (!Main.mainWindow.isActive()) {
             return false;
         }
-        return p.x >= 0 && p.y >= 0 && p.x < Canvas.NUM_TILES + Canvas.TILE_SIZE && p.y < Canvas.NUM_TILES;
+        return p.x >= 0 && p.y >= 0 && p.x < EditorCanvas.NUM_TILES + EditorCanvas.TILE_SIZE && p.y < EditorCanvas.NUM_TILES;
     }
 
     /**
@@ -118,7 +118,7 @@ public class Util {
                 lastMilli = System.currentTimeMillis();
             }
             if (System.currentTimeMillis() - 1000 > lastMilli) {
-                GUI.jframe.setTitle("RSC Community Landscape Editor" + " - " + " Sector: " + "h" + sectorH + "x"
+                Main.mainWindow.setTitle("RSC Community Landscape Editor" + " - " + " Sector: " + "h" + sectorH + "x"
                         + sectorX + "y" + sectorY);
                 fpsCount = 0;
                 lastMilli = System.currentTimeMillis();
@@ -154,14 +154,14 @@ public class Util {
     /**
      * Unpack the data from the Landscape file to a ByteBuffer
      */
-    public static void unpack() {
+    public static void unpack(int sectorX, int sectorY, int sectorH) {
         try {
             tileArchive = new ZipFile(ourFile);
             ZipEntry e = tileArchive.getEntry("h" + sectorH + "x" + sectorX + "y" + sectorY);
             if (e != null) {
                 ourData = streamToBuffer(new BufferedInputStream(tileArchive.getInputStream(e)));
             } else {
-                JOptionPane.showConfirmDialog(GUI.jframe, "Sorry, Wrong sector String specified.");
+                JOptionPane.showConfirmDialog(null, "Sorry, Wrong sector String specified.");
             }
         } catch (Exception e) {
             error(e);
@@ -169,11 +169,11 @@ public class Util {
     }
 
     public static ByteBuffer pack() throws IOException {
-        ByteBuffer out = ByteBuffer.allocate(10 * (Canvas.GRID_SIZE * Canvas.GRID_SIZE));
+        ByteBuffer out = ByteBuffer.allocate(10 * (EditorCanvas.GRID_SIZE * EditorCanvas.GRID_SIZE));
 
-        for (int i = 0; i < Canvas.GRID_SIZE; i++) {
-            for (int j = 0; j < Canvas.GRID_SIZE; j++) {
-                out.put(Canvas.tileGrid[i][j].pack());
+        for (int i = 0; i < EditorCanvas.GRID_SIZE; i++) {
+            for (int j = 0; j < EditorCanvas.GRID_SIZE; j++) {
+                out.put(EditorCanvas.tileGrid[i][j].pack());
             }
         }
         out.flip();
@@ -288,37 +288,50 @@ public class Util {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static void prepareData() {
         try {
             // Adding all Objects coords into a HashMap allowing instant pulling
             // for each tile.
-            ((LinkedList<GameObjectLoc>) Objects.requireNonNull(PersistenceManager.load(new File(
-                    "xml/GameObjectLoc.xml.gz")))).forEach(go -> Util.objectCoordSet.put(new Point(go.getX(), go.getY()), go));
+            List<GameObjectLoc> gameObjectLocs = (LinkedList<GameObjectLoc>) PersistenceManager.load(
+                    Util.class.getResourceAsStream("/xml/GameObjectLoc.xml.gz")
+            );
+            gameObjectLocs.forEach(go -> Util.objectCoordSet.put(new Point(go.getX(), go.getY()), go));
+
             // Adding all NPCs into the hashmap.
-            ((LinkedList<NpcLoc>) Objects.requireNonNull(PersistenceManager.load(new File(
-                    "xml/NpcLoc.xml.gz")))).forEach(loc -> Util.npcCoordSet.put(new Point(loc.startX, loc.startY()), loc));
+            List<NpcLoc> npcLocs = (LinkedList<NpcLoc>) PersistenceManager.load(
+                    Util.class.getResourceAsStream("/xml/NpcLoc.xml.gz")
+            );
+            npcLocs.forEach(loc -> Util.npcCoordSet.put(new Point(loc.startX, loc.startY()), loc));
+
             // Adding all ground Items into hashmap.
-            ((LinkedList<ItemLoc>) Objects.requireNonNull(PersistenceManager.load(new File(
-                    "xml/ItemLoc.xml.gz")))).forEach(loc -> Util.itemCoordSet.put(new Point(loc.getX(), loc.getY()), loc));
+            List<ItemLoc> itemLocs = (LinkedList<ItemLoc>) PersistenceManager.load(
+                    Util.class.getResourceAsStream("/xml/ItemLoc.xml.gz")
+            );
+            itemLocs.forEach(loc -> Util.itemCoordSet.put(new Point(loc.getX(), loc.getY()), loc));
+
             // Getting all the IDs - names, for objects/npcs/items in the
             // hashmaps.
-            BufferedReader input = new BufferedReader(new FileReader(new File("xml/item.txt")));
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                String[] temp = line.split(": ");
+            Scanner itemNameScanner = new Scanner(Util.class.getResourceAsStream("/xml/item.txt"));
+            while (itemNameScanner.hasNextLine()) {
+                String[] temp = itemNameScanner.nextLine().split(": ");
                 itemNames.put(Integer.valueOf(temp[0]), temp[1]);
             }
-            input = new BufferedReader(new FileReader(new File("xml/npc.txt")));
-            while ((line = input.readLine()) != null) {
-                String[] temp = line.split(": ");
+            itemNameScanner.close();
+
+            Scanner npcNameScanner = new Scanner(Util.class.getResourceAsStream("/xml/npc.txt"));
+            while (npcNameScanner.hasNextLine()) {
+                String[] temp = npcNameScanner.nextLine().split(": ");
                 npcNames.put(Integer.valueOf(temp[0]), temp[1]);
             }
-            input = new BufferedReader(new FileReader(new File("xml/objects.txt")));
-            while ((line = input.readLine()) != null) {
-                String[] temp = line.split(": ");
+            npcNameScanner.close();
+
+            Scanner objectNameScanner = new Scanner(Util.class.getResourceAsStream("/xml/objects.txt"));
+            while (objectNameScanner.hasNextLine()) {
+                String[] temp = objectNameScanner.nextLine().split(": ");
                 objectNames.put(Integer.valueOf(temp[0]), temp[1]);
             }
-
+            objectNameScanner.close();
         } catch (Exception e) {
             error(e);
         }
@@ -394,44 +407,44 @@ public class Util {
 
         if (!toggleInfo) {
             // show rsc data
-            GUI.tile.setText("RSC Coords: " + rscTile.x + ", " + rscTile.y);
+            MainWindow.tile.setText("RSC Coords: " + rscTile.x + ", " + rscTile.y);
 
             if (tile.getTileObject() != null) {
-                GUI.elevation.setText("ObjectID: " + tile.getTileObject().getId());
-                GUI.roofTexture.setText("Object Name: " + tile.getTileObject().getName());
+                MainWindow.elevation.setText("ObjectID: " + tile.getTileObject().getId());
+                MainWindow.roofTexture.setText("Object Name: " + tile.getTileObject().getName());
             } else {
-                GUI.elevation.setText("");
-                GUI.roofTexture.setText("");
+                MainWindow.elevation.setText("");
+                MainWindow.roofTexture.setText("");
             }
             if (tile.getTileNpc() != null) {
-                GUI.overlay.setText("NpcID: " + tile.getTileNpc().getId());
-                GUI.horizontalWall.setText("Npc Name: " + tile.getTileNpc().getName());
+                MainWindow.overlay.setText("NpcID: " + tile.getTileNpc().getId());
+                MainWindow.horizontalWall.setText("Npc Name: " + tile.getTileNpc().getName());
             } else {
-                GUI.overlay.setText("");
-                GUI.horizontalWall.setText("");
+                MainWindow.overlay.setText("");
+                MainWindow.horizontalWall.setText("");
             }
             if (tile.getTileItem() != null) {
-                GUI.verticalWall.setText("ItemID: " + tile.getTileItem().getId());
-                GUI.diagonalWall.setText("Item Name: " + tile.getTileItem().getName());
+                MainWindow.verticalWall.setText("ItemID: " + tile.getTileItem().getId());
+                MainWindow.diagonalWall.setText("Item Name: " + tile.getTileItem().getName());
             } else {
-                GUI.verticalWall.setText("");
-                GUI.diagonalWall.setText("");
+                MainWindow.verticalWall.setText("");
+                MainWindow.diagonalWall.setText("");
             }
         } else {
             // show advanced tile data
-            GUI.tile.setText("Selected tile info: " + "\nID: " + tile.getID());
-            GUI.elevation.setText("Ground Elevation: " + tile.getGroundElevationInt());
-            GUI.overlay.setText("Ground Overlay: " + tile.getGroundOverlayInt());
-            GUI.roofTexture.setText("Roof Texture: " + tile.getRoofTexture());
-            GUI.groundtexture.setText("GroundTexture: " + tile.getGroundTextureInt());
-            GUI.diagonalWall.setText("Diagonal Wall: " + tile.getDiagonalWallsInt());
-            GUI.verticalWall.setText("Vertical Wall: " + tile.getVerticalWallInt());
-            GUI.horizontalWall.setText("Horizontal Wall: " + tile.getHorizontalWallInt());
+            MainWindow.tile.setText("Selected tile info: " + "\nID: " + tile.getID());
+            MainWindow.elevation.setText("Ground Elevation: " + tile.getGroundElevationInt());
+            MainWindow.overlay.setText("Ground Overlay: " + tile.getGroundOverlayInt());
+            MainWindow.roofTexture.setText("Roof Texture: " + tile.getRoofTexture());
+            MainWindow.groundtexture.setText("GroundTexture: " + tile.getGroundTextureInt());
+            MainWindow.diagonalWall.setText("Diagonal Wall: " + tile.getDiagonalWallsInt());
+            MainWindow.verticalWall.setText("Vertical Wall: " + tile.getVerticalWallInt());
+            MainWindow.horizontalWall.setText("Horizontal Wall: " + tile.getHorizontalWallInt());
         }
     }
 
     public static void doFastEvents() {
-        GUI.brushes.getSelectedItem();
+        MainWindow.brushes.getSelectedItem();
     }
 
     /**
@@ -457,7 +470,7 @@ public class Util {
         getOverlay.put((byte) 9, Color.WHITE);
 
         /* Brown Fence vertical */
-        getVerticalWallColor.put((byte) 5, new Color(139, 69, Canvas.TILE_SIZE));
+        getVerticalWallColor.put((byte) 5, new Color(139, 69, EditorCanvas.TILE_SIZE));
         /* White walls, unknown */
         getVerticalWallColor.put((byte) 1, Color.WHITE);
         getVerticalWallColor.put((byte) 15, Color.WHITE);
@@ -471,7 +484,7 @@ public class Util {
         getVerticalWallColor.put((byte) 4, Color.WHITE);
 
         /* Brown fence Horizontal */
-        getHorizontalWallColor.put((byte) 5, new Color(139, 69, Canvas.TILE_SIZE));
+        getHorizontalWallColor.put((byte) 5, new Color(139, 69, EditorCanvas.TILE_SIZE));
         /* White walls, unknown */
         getHorizontalWallColor.put((byte) 1, Color.WHITE);
         /* This one is a stony wall with windows */
@@ -561,7 +574,7 @@ public class Util {
     public static int sectorH = 0;
     public static final int FPS = 1;
     public static boolean sectorChanged = false;
-    public static final int THREAD_DELAY = 4;
+    public static final int THREAD_DELAY = 8;
     public static String ourLandscapeFile = null;
     public static ByteBuffer ourData;
     public static boolean showRoofs = false;

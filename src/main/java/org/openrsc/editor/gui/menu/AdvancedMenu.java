@@ -1,8 +1,8 @@
 package org.openrsc.editor.gui.menu;
 
-import org.openrsc.editor.GUI;
 import org.openrsc.editor.Util;
 import org.openrsc.editor.gui.GuiUtils;
+import org.openrsc.editor.gui.MainWindow;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -69,28 +69,28 @@ public class AdvancedMenu extends BaseMenu {
         toggleInfo.setText("Toggle Tile Info");
         toggleInfo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (Util.STATE == Util.State.RENDER_READY && !GUI.tile.getText().equals("")) {
+                if (Util.STATE == Util.State.RENDER_READY && !MainWindow.tile.getText().equals("")) {
                     if (!Util.toggleInfo) {
                         Util.toggleInfo = true;
-                        GUI.tile.setText("");
-                        GUI.elevation.setText("");
-                        GUI.overlay.setText("");
-                        GUI.roofTexture.setText("");
-                        GUI.groundtexture.setText("");
-                        GUI.diagonalWall.setText("");
-                        GUI.verticalWall.setText("");
-                        GUI.horizontalWall.setText("");
+                        MainWindow.tile.setText("");
+                        MainWindow.elevation.setText("");
+                        MainWindow.overlay.setText("");
+                        MainWindow.roofTexture.setText("");
+                        MainWindow.groundtexture.setText("");
+                        MainWindow.diagonalWall.setText("");
+                        MainWindow.verticalWall.setText("");
+                        MainWindow.horizontalWall.setText("");
                         Util.updateText(Util.selectedTile);
                     } else {
                         Util.toggleInfo = false;
-                        GUI.tile.setText("");
-                        GUI.elevation.setText("");
-                        GUI.overlay.setText("");
-                        GUI.roofTexture.setText("");
-                        GUI.groundtexture.setText("");
-                        GUI.diagonalWall.setText("");
-                        GUI.verticalWall.setText("");
-                        GUI.horizontalWall.setText("");
+                        MainWindow.tile.setText("");
+                        MainWindow.elevation.setText("");
+                        MainWindow.overlay.setText("");
+                        MainWindow.roofTexture.setText("");
+                        MainWindow.groundtexture.setText("");
+                        MainWindow.diagonalWall.setText("");
+                        MainWindow.verticalWall.setText("");
+                        MainWindow.horizontalWall.setText("");
                         Util.updateText(Util.selectedTile);
                     }
                 }

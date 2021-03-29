@@ -1,9 +1,11 @@
 package org.openrsc.editor;
 
 import com.thoughtworks.xstream.XStream;
+import org.openrsc.editor.data.GameObjectLoc;
+import org.openrsc.editor.data.ItemLoc;
+import org.openrsc.editor.data.NpcLoc;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,22 +17,18 @@ public class PersistenceManager {
     private static final XStream xstream = new XStream();
 
     static {
-        addAlias("GameObjectLoc", "org.openrsc.editor.data.GameObjectLoc");
-        addAlias("NPCLoc", "org.openrsc.editor.data.NpcLoc");
-        addAlias("ItemLoc", "org.openrsc.editor.data.ItemLoc");
+        addAlias("GameObjectLoc", GameObjectLoc.class);
+        addAlias("NPCLoc", NpcLoc.class);
+        addAlias("ItemLoc", ItemLoc.class);
     }
 
-    private static void addAlias(String name, String className) {
-        try {
-            xstream.alias(name, Class.forName(className));
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    private static void addAlias(String name, Class<?> type) {
+        xstream.alias(name, type);
     }
 
-    public static Object load(File file) {
+    public static Object load(InputStream stream) {
         try {
-            InputStream is = new GZIPInputStream(new FileInputStream(file));
+            InputStream is = new GZIPInputStream(stream);
             return xstream.fromXML(is);
         } catch (IOException ioe) {
             System.err.println(ioe.getMessage());
