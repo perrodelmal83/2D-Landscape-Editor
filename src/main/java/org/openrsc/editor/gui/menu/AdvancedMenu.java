@@ -48,7 +48,7 @@ public class AdvancedMenu extends BaseMenu {
         add(jumpToCoordinates);
 
         JMenuItem toggleRoofs = new JMenuItem();
-        toggleRoofs.setText("Show Roofs");
+        toggleRoofs.setText("Toggle Roofs");
         toggleRoofs.addActionListener(evt -> toggleShowRoofs.get().thenAccept(
                 showRoofs -> toggleRoofs.setText(
                         (showRoofs ? "Hide" : "Show") + " Roofs"
@@ -57,9 +57,9 @@ public class AdvancedMenu extends BaseMenu {
         add(toggleRoofs);
 
         JMenuItem toggleNpcs = new JMenuItem();
-        toggleNpcs.setText("Hide Npcs/Objects/Items");
+        toggleNpcs.setText("Toggle Npcs/Objects/Items");
         toggleNpcs.addActionListener(evt -> toggleShowNpcs.get().thenAccept(
-                showNpcs -> toggleRoofs.setText(
+                showNpcs -> toggleNpcs.setText(
                         (showNpcs ? "Hide" : "Show") + " Npcs/Objects/Items"
                 )
         ));
