@@ -1,4 +1,6 @@
-package com.data;
+package org.openrsc.editor.data;
+
+import org.openrsc.editor.Util;
 
 public class ItemLoc {
     /**
@@ -23,7 +25,7 @@ public class ItemLoc {
     public int respawnTime;
 
     public String getName() {
-        return com.Util.itemNames.get(this.getId());
+        return Util.itemNames.get(this.getId());
     }
 
     public int getId() {

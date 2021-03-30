@@ -1,18 +1,13 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import org.openrsc.editor.data.GameObjectLoc;
+import org.openrsc.editor.data.ItemLoc;
+import org.openrsc.editor.data.NpcLoc;
+
+import java.awt.*;
 import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import com.data.GameObjectLoc;
-import com.data.ItemLoc;
-import com.data.NpcLoc;
 
 /**
  * @author xEnt/Vrunk/Peter the Properties/values that each RSC Tile holds.
@@ -295,93 +290,93 @@ public class Tile {
         // paints Tile ground data.
         if (this.getGroundTextureInt() >= 0) {
             int ourb = this.getGroundTextureInt();
-            Canvas.offscreenGraphics.setColor(Util.MAP_BRIGHTNESS_LIGHT ? Util.colorArray[ourb] : Util.colorArray[ourb]
+            EditorCanvas.offscreenGraphics.setColor(Util.MAP_BRIGHTNESS_LIGHT ? Util.colorArray[ourb] : Util.colorArray[ourb]
                     .darker().darker());
-            Canvas.offscreenGraphics.fill(this.getShape());
-            Canvas.offscreenGraphics.draw(this.getShape());
+            EditorCanvas.offscreenGraphics.fill(this.getShape());
+            EditorCanvas.offscreenGraphics.draw(this.getShape());
         }
 
         // paints Tile ground data (Paths/roads etc, things on top of the
         // original data)
         if (Util.getOverlay.get(this.getGroundOverlay()) != null && this.getGroundOverlay() >= 0) {
-            Canvas.offscreenGraphics.setColor(Util.getOverlay.get(this.getGroundOverlay()));
-            Canvas.offscreenGraphics.fill(this.getShape());
-            Canvas.offscreenGraphics.draw(this.getShape());
+            EditorCanvas.offscreenGraphics.setColor(Util.getOverlay.get(this.getGroundOverlay()));
+            EditorCanvas.offscreenGraphics.fill(this.getShape());
+            EditorCanvas.offscreenGraphics.draw(this.getShape());
         }
         // paints Tile wall color (Vertical) + the line to show a wall is there.
         if (Util.getVerticalWallColor.get(this.getVerticalWall()) != null) {
-            Canvas.offscreenGraphics.setColor(Util.wallOutline);
-            Canvas.offscreenGraphics.setStroke(new BasicStroke(2));
-            Canvas.offscreenGraphics.draw(new Line2D.Double(this.getX() + Canvas.TILE_SIZE, this.getY(), this.getX(),
+            EditorCanvas.offscreenGraphics.setColor(Util.wallOutline);
+            EditorCanvas.offscreenGraphics.setStroke(new BasicStroke(2));
+            EditorCanvas.offscreenGraphics.draw(new Line2D.Double(this.getX() + EditorCanvas.TILE_SIZE, this.getY(), this.getX(),
                     this.getY()));
         }
         // paints Tile wall color (Horizontal) + line to show a wall is there.
         if (Util.getHorizontalWallColor.get(this.getHorizontalWall()) != null) {
-            Canvas.offscreenGraphics.setColor(Util.wallOutline);
-            Canvas.offscreenGraphics.setStroke(new BasicStroke(2));
-            Canvas.offscreenGraphics.draw(new Line2D.Double(this.getX() + Canvas.TILE_SIZE, this.getY()
-                    + Canvas.TILE_SIZE, this.getX() + Canvas.TILE_SIZE, this.getY()));
+            EditorCanvas.offscreenGraphics.setColor(Util.wallOutline);
+            EditorCanvas.offscreenGraphics.setStroke(new BasicStroke(2));
+            EditorCanvas.offscreenGraphics.draw(new Line2D.Double(this.getX() + EditorCanvas.TILE_SIZE, this.getY()
+                    + EditorCanvas.TILE_SIZE, this.getX() + EditorCanvas.TILE_SIZE, this.getY()));
         }
         // paints Diagonal walls.
         if (Util.getDiagonalWallColorS.get(this.getDiagonalWallsInt()) != null) {
             // Bottom left to top right. /
-            Canvas.offscreenGraphics.setColor(Util.wallOutline);
-            Canvas.offscreenGraphics.setStroke(new BasicStroke(2));
-            Canvas.offscreenGraphics.draw(new Line2D.Double(this.getX(), this.getY() + Canvas.TILE_SIZE, this.getX()
-                    + Canvas.TILE_SIZE, this.getY()));
+            EditorCanvas.offscreenGraphics.setColor(Util.wallOutline);
+            EditorCanvas.offscreenGraphics.setStroke(new BasicStroke(2));
+            EditorCanvas.offscreenGraphics.draw(new Line2D.Double(this.getX(), this.getY() + EditorCanvas.TILE_SIZE, this.getX()
+                    + EditorCanvas.TILE_SIZE, this.getY()));
         }
         if (Util.getDiagonalWallColorW.get(this.getDiagonalWallsInt()) != null) {
             // bottom right to top left \
-            Canvas.offscreenGraphics.setColor(Util.wallOutline);
-            Canvas.offscreenGraphics.setStroke(new BasicStroke(2));
-            Canvas.offscreenGraphics.draw(new Line2D.Double(this.getX(), this.getY(), this.getX() + Canvas.TILE_SIZE,
-                    this.getY() + Canvas.TILE_SIZE));
+            EditorCanvas.offscreenGraphics.setColor(Util.wallOutline);
+            EditorCanvas.offscreenGraphics.setStroke(new BasicStroke(2));
+            EditorCanvas.offscreenGraphics.draw(new Line2D.Double(this.getX(), this.getY(), this.getX() + EditorCanvas.TILE_SIZE,
+                    this.getY() + EditorCanvas.TILE_SIZE));
         }
         /*
          * this is the Outline around the selected Tile.
          */
         if (Util.selectedTile != null && Util.selectedTile.equals(this)) {
-            Canvas.offscreenGraphics.setColor(Color.GREEN);
-            Shape rec = new Rectangle(this.getX() + 1, this.getY(), Canvas.TILE_SIZE - 1, Canvas.TILE_SIZE - 1);
-            Canvas.offscreenGraphics.draw(rec);
+            EditorCanvas.offscreenGraphics.setColor(Color.GREEN);
+            Shape rec = new Rectangle(this.getX() + 1, this.getY(), EditorCanvas.TILE_SIZE - 1, EditorCanvas.TILE_SIZE - 1);
+            EditorCanvas.offscreenGraphics.draw(rec);
         }
 
         // Objects (Cyan)
-        if (GUI.hideNpcs.getText().equals("Hide Npcs/Objects/Items")) {
+        if (Util.showNpcs) {
             if (Util.objectCoordSet.get(Util.getRSCCoords(this)) != null) {
                 this.objectLoc = Util.objectCoordSet.get(Util.getRSCCoords(this));
                 int size = 8;
-                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, Canvas.TILE_SIZE - 1
-                        - size, Canvas.TILE_SIZE - 1 - size);
-                Canvas.offscreenGraphics.setColor(Color.CYAN);
-                Canvas.offscreenGraphics.fill(rec);
-                Canvas.offscreenGraphics.draw(rec);
+                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, EditorCanvas.TILE_SIZE - 1
+                        - size, EditorCanvas.TILE_SIZE - 1 - size);
+                EditorCanvas.offscreenGraphics.setColor(Color.CYAN);
+                EditorCanvas.offscreenGraphics.fill(rec);
+                EditorCanvas.offscreenGraphics.draw(rec);
             }
             if (Util.itemCoordSet.get(Util.getRSCCoords(this)) != null) {
                 this.itemLoc = Util.itemCoordSet.get(Util.getRSCCoords(this));
                 int size = 8;
-                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, Canvas.TILE_SIZE - 1
-                        - size, Canvas.TILE_SIZE - 1 - size);
-                Canvas.offscreenGraphics.setColor(Color.RED);
-                Canvas.offscreenGraphics.fill(rec);
-                Canvas.offscreenGraphics.draw(rec);
+                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, EditorCanvas.TILE_SIZE - 1
+                        - size, EditorCanvas.TILE_SIZE - 1 - size);
+                EditorCanvas.offscreenGraphics.setColor(Color.RED);
+                EditorCanvas.offscreenGraphics.fill(rec);
+                EditorCanvas.offscreenGraphics.draw(rec);
             }
             if (Util.npcCoordSet.get(Util.getRSCCoords(this)) != null) {
                 this.npcLoc = Util.npcCoordSet.get(Util.getRSCCoords(this));
                 int size = 8;
-                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, Canvas.TILE_SIZE - 1
-                        - size, Canvas.TILE_SIZE - 1 - size);
-                Canvas.offscreenGraphics.setColor(Color.YELLOW);
-                Canvas.offscreenGraphics.fill(rec);
-                Canvas.offscreenGraphics.draw(rec);
+                Shape rec = new Rectangle(this.getX() + 1 + size / 2, this.getY() + size / 2, EditorCanvas.TILE_SIZE - 1
+                        - size, EditorCanvas.TILE_SIZE - 1 - size);
+                EditorCanvas.offscreenGraphics.setColor(Color.YELLOW);
+                EditorCanvas.offscreenGraphics.fill(rec);
+                EditorCanvas.offscreenGraphics.draw(rec);
             }
         }
 
         // Roofs
-        if (Util.roofs && this.getRoofTexture() == (byte) 1) {
-            Canvas.offscreenGraphics.setColor(Color.ORANGE);
-            Shape rec = new Rectangle(this.getX() + 1, this.getY(), Canvas.TILE_SIZE - 1, Canvas.TILE_SIZE - 1);
-            Canvas.offscreenGraphics.draw(rec);
+        if (Util.showRoofs && this.getRoofTexture() == (byte) 1) {
+            EditorCanvas.offscreenGraphics.setColor(Color.ORANGE);
+            Shape rec = new Rectangle(this.getX() + 1, this.getY(), EditorCanvas.TILE_SIZE - 1, EditorCanvas.TILE_SIZE - 1);
+            EditorCanvas.offscreenGraphics.draw(rec);
 
         }
 

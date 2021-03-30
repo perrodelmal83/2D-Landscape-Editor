@@ -1,16 +1,9 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.Container;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 
 public class SelectSection extends JDialog implements ActionListener {
     private final int WINDOW_WIDTH = 150;

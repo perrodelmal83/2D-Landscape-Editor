@@ -1,25 +1,20 @@
-package com;
+package org.openrsc.editor;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
+import org.openrsc.editor.gui.MainWindow;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 /**
  * @author xEnt/Vrunk/Peter
  * @info the Class behind the Map editor that does all the dirty work.
  */
 
-public class Canvas implements Runnable, MouseListener, MouseMotionListener {
+public class EditorCanvas implements Runnable, MouseListener, MouseMotionListener {
 
     JFrame ourFrame;
     private Graphics2D g2d;
@@ -49,7 +44,7 @@ public class Canvas implements Runnable, MouseListener, MouseMotionListener {
      *              Constructor, that parses the frame down to the initialization
      *              process.
      */
-    public Canvas(final JFrame frame) {
+    public EditorCanvas(final JFrame frame) {
         init(frame);
     }
 
@@ -101,7 +96,7 @@ public class Canvas implements Runnable, MouseListener, MouseMotionListener {
                     Util.selectedTile.renderTile(offscreenGraphics);
                     g2d.drawImage(offscreenImage, 0, 0, panel);
                 } else if (Util.STATE == Util.State.LOADED || Util.STATE == Util.State.CHANGING_SECTOR) {
-                    Util.unpack();
+                    Util.unpack(Util.sectorX, Util.sectorY, Util.sectorH);
                     setTiles();
                     render();
                 } else if (Util.STATE == Util.State.FORCE_FULL_RENDER) {
@@ -115,10 +110,10 @@ public class Canvas implements Runnable, MouseListener, MouseMotionListener {
                         render();
                     }
                 }
-                GUI.jframe.setTitle("RSC Landscape Editor" + " - " + " Sector: " + "h"
+                Main.mainWindow.setTitle("RSC Landscape Editor" + " - " + " Sector: " + "h"
                         + Util.sectorH + "x" + Util.sectorX + "y" + Util.sectorY);
                 curTime += Util.THREAD_DELAY;
-                Util.sleep();
+                Thread.sleep(Constants.SLEEP_DELAY_MS);
             }
         } catch (Exception e) {
             Util.error(e);
@@ -204,7 +199,7 @@ public class Canvas implements Runnable, MouseListener, MouseMotionListener {
             Util.STATE = Util.State.TILE_NEEDS_UPDATING;
             return;
         }
-        if (!GUI.brushes.getSelectedItem().equals("None")) {
+        if (!MainWindow.brushes.getSelectedItem().equals("None")) {
             Util.sectorChanged = true;
         }
 
@@ -223,16 +218,16 @@ public class Canvas implements Runnable, MouseListener, MouseMotionListener {
     private void checkPaint(Tile tile) {
         try {
             if (tile != null) {
-                final String selected = GUI.brushes.getSelectedItem().toString();
+                final String selected = MainWindow.brushes.getSelectedItem().toString();
                 switch (selected) {
                     case "Configure your own":
-                        tile.setGroundTexture((byte) GUI.textureJS.getValue());
-                        tile.setDiagonalWalls(GUI.diagonalWallJS.getValue());
-                        tile.setVerticalWall((byte) GUI.verticalWallJS.getValue());
-                        tile.setHorizontalWall((byte) GUI.horizontalWallJS.getValue());
-                        tile.setGroundOverlay((byte) GUI.overlayJS.getValue());
-                        tile.setRoofTexture((byte) GUI.roofTextureJS.getValue());
-                        tile.setGroundElevation((byte) GUI.elevationJS.getValue());
+                        tile.setGroundTexture((byte) MainWindow.textureJS.getValue());
+                        tile.setDiagonalWalls(MainWindow.diagonalWallJS.getValue());
+                        tile.setVerticalWall((byte) MainWindow.verticalWallJS.getValue());
+                        tile.setHorizontalWall((byte) MainWindow.horizontalWallJS.getValue());
+                        tile.setGroundOverlay((byte) MainWindow.overlayJS.getValue());
+                        tile.setRoofTexture((byte) MainWindow.roofTextureJS.getValue());
+                        tile.setGroundElevation((byte) MainWindow.elevationJS.getValue());
                         break;
                     case "Delete Tile":
                         Util.clearTile(tile);

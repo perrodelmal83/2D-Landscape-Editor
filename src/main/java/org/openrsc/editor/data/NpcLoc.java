@@ -1,4 +1,6 @@
-package com.data;
+package org.openrsc.editor.data;
+
+import org.openrsc.editor.Util;
 
 public class NpcLoc {
     /**
@@ -45,7 +47,7 @@ public class NpcLoc {
     }
 
     public String getName() {
-        return com.Util.npcNames.get(this.getId());
+        return Util.npcNames.get(this.getId());
     }
 
     public int startX() {

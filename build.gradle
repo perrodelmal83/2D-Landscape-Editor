@@ -1,0 +1,45 @@
+plugins {
+    id "application"
+    id "java"
+}
+
+group "org.openrsc"
+version "1.0-SNAPSHOT"
+
+application {
+    mainClassName = "org.openrsc.editor.Main"
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'org.openrsc.editor.Main'
+        )
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter() // jcenter is a superset of mavenCentral
+}
+
+dependencies {
+    compile "xpp3:xpp3:1.1.4c"
+    compile "com.thoughtworks.xstream:xstream:1.4.9"
+}
+
+task copyJar(type: Copy) {
+    from jar // here it automatically reads jar file produced from jar task
+    into './'
+    rename(new Transformer<String, String>() {
+        @Override
+        String transform(String s) {
+            return name.substring(0, name.lastIndexOf("-")) + ".jar"
+        }
+    })
+}
+
+tasks.build.finalizedBy copyJar
