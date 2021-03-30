@@ -2,12 +2,25 @@ package org.openrsc.editor;
 
 import org.openrsc.editor.gui.MainWindow;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author xEnt/Vrunk/Peter
@@ -38,6 +51,7 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
      * The total number of x/y coordinates in the tileGrid.
      */
     public static final int NUM_TILES = GRID_SIZE * TILE_SIZE;
+    private List<Tile> hoverTiles = Collections.emptyList();
 
     /**
      * @param frame - the instance of the JFrame from the GUI class. the Class
@@ -133,6 +147,14 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                 tileGrid[i][j].renderTile(offscreenGraphics);
             }
         }
+        hoverTiles.stream()
+                .filter(Objects::nonNull)
+                .forEach(tile -> {
+                    drawLine(tile, LineLocation.BORDER_TOP, Color.YELLOW);
+                    drawLine(tile, LineLocation.BORDER_BOTTOM, Color.YELLOW);
+                    drawLine(tile, LineLocation.BORDER_RIGHT, Color.YELLOW);
+                    drawLine(tile, LineLocation.BORDER_LEFT, Color.YELLOW);
+                });
         g2d.drawImage(offscreenImage, 0, 0, panel);
     }
 
@@ -151,7 +173,7 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                     tile.setID(count);
                     tile.setLane(i);
                     tile.setPosition(j);
-                    tile = tile.unpack(Util.ourData, tile);
+                    tile = tile.unpack(Util.buffer, tile);
                     tile.setShape(new Rectangle(tile.getX(), tile.getY(), TILE_SIZE, TILE_SIZE));
                     count++;
                 }
@@ -177,14 +199,42 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
 
     public static int lastButton = 0;
 
+    private void paintStampCursor(Point cursorCoords, int mouseButton, int stampSize) {
+        List<Tile> tiles = new ArrayList<>(stampSize * stampSize);
+
+        // Translate origin back half distance to center main point, then add all points covering stamp size
+        Point hoveredGridPosition = Util.mouseCoordsToGridCoords(cursorCoords);
+        int xOrigin = hoveredGridPosition.x - (stampSize / 2);
+        int yOrigin = hoveredGridPosition.y - (stampSize / 2);
+
+        for (int j = 0; j < stampSize; j++) {
+            for (int i = 0; i < stampSize; i++) {
+                Optional.ofNullable(
+                        getTileByGridCoords(xOrigin + i, yOrigin + j)
+                ).ifPresent(tiles::add);
+            }
+        }
+
+        hoverTiles = tiles;
+        Util.STATE = Util.State.FORCE_FULL_RENDER;
+    }
+
+    private Tile getTileByGridCoords(final int x, final int y) {
+        try {
+            return EditorCanvas.tileGrid[x][y];
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
     /**
      * Handles everything that goes on when selecting a Tile.
      *
      * @param p - Point from the mouse click.
      */
-    private void handleTilePaint(Point p, int clicks, boolean drag) {
+    private void handleTilePaint(Point p, int mouseButton, boolean drag) {
 
-        Tile tile = Util.findTileInGrid(p.getLocation());
+        Tile tile = Util.mapCoordsToGridTile(p.getLocation());
         if (tile == null) {
             return;
         }
@@ -193,20 +243,20 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
             Util.oldSelectedTile = Util.selectedTile;
         }
         Util.oldSelectedTile = Util.selectedTile;
-        if (clicks == 3) {
+        if (mouseButton == 3) {
             Util.updateText(tile);
             Util.selectedTile = tile;
             Util.STATE = Util.State.TILE_NEEDS_UPDATING;
             return;
         }
-        if (!MainWindow.brushes.getSelectedItem().equals("None")) {
-            Util.sectorChanged = true;
+        if (!"None".equals(MainWindow.brushes.getSelectedItem())) {
+            Util.sectorModified = true;
         }
 
-        checkPaint(tile);
+        hoverTiles.forEach(this::checkPaint);
         Util.updateText(tile);
         Util.selectedTile = tile;
-        Util.STATE = Util.State.TILE_NEEDS_UPDATING;
+        Util.STATE = Util.State.FORCE_FULL_RENDER;
 
     }
 
@@ -223,8 +273,8 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                     case "Configure your own":
                         tile.setGroundTexture((byte) MainWindow.textureJS.getValue());
                         tile.setDiagonalWalls(MainWindow.diagonalWallJS.getValue());
-                        tile.setVerticalWall((byte) MainWindow.verticalWallJS.getValue());
-                        tile.setHorizontalWall((byte) MainWindow.horizontalWallJS.getValue());
+                        tile.setTopBorderWall((byte) MainWindow.verticalWallJS.getValue());
+                        tile.setRightBorderWall((byte) MainWindow.horizontalWallJS.getValue());
                         tile.setGroundOverlay((byte) MainWindow.overlayJS.getValue());
                         tile.setRoofTexture((byte) MainWindow.roofTextureJS.getValue());
                         tile.setGroundElevation((byte) MainWindow.elevationJS.getValue());
@@ -233,10 +283,10 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                         Util.clearTile(tile);
                         break;
                     case "Remove North Wall":
-                        tile.setVerticalWall((byte) 0);
+                        tile.setTopBorderWall((byte) 0);
                         break;
                     case "Remove East Wall":
-                        tile.setHorizontalWall((byte) 0);
+                        tile.setRightBorderWall((byte) 0);
                         break;
                     case "Remove Diagonal Wall":
                         tile.setDiagonalWalls(0);
@@ -263,55 +313,55 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                         tile.setGroundOverlay((byte) 16);
                         break;
                     case "North Wall(0) -":
-                        tile.setVerticalWall((byte) 15);
+                        tile.setTopBorderWall((byte) 15);
                         break;
                     case "East Wall(0) |":
-                        tile.setHorizontalWall((byte) 15);
+                        tile.setRightBorderWall((byte) 15);
                         break;
                     case "Diagonal Wall(0) /":
                         tile.setDiagonalWalls(1);
                         break;
                     case "North Wall(1) -":
-                        tile.setVerticalWall((byte) 5);
+                        tile.setTopBorderWall((byte) 5);
                         break;
                     case "North Wall(2) -":
-                        tile.setVerticalWall((byte) 1);
+                        tile.setTopBorderWall((byte) 1);
                         break;
                     case "North Wall(3) -":
-                        tile.setVerticalWall((byte) 7);
+                        tile.setTopBorderWall((byte) 7);
                         break;
                     case "North Wall(4) -":
-                        tile.setVerticalWall((byte) 14);
+                        tile.setTopBorderWall((byte) 14);
                         break;
                     case "North Wall(5) -":
-                        tile.setVerticalWall((byte) 57);
+                        tile.setTopBorderWall((byte) 57);
                         break;
                     case "North Wall(6) -":
-                        tile.setVerticalWall((byte) 16);
+                        tile.setTopBorderWall((byte) 16);
                         break;
                     case "North Wall(7) -":
-                        tile.setVerticalWall((byte) 4);
+                        tile.setTopBorderWall((byte) 4);
                         break;
                     case "East Wall(1) |":
-                        tile.setHorizontalWall((byte) 5);
+                        tile.setRightBorderWall((byte) 5);
                         break;
                     case "East Wall(2) |":
-                        tile.setHorizontalWall((byte) 1);
+                        tile.setRightBorderWall((byte) 1);
                         break;
                     case "East Wall(3) |":
-                        tile.setHorizontalWall((byte) 7);
+                        tile.setRightBorderWall((byte) 7);
                         break;
                     case "East Wall(4) |":
-                        tile.setHorizontalWall((byte) 14);
+                        tile.setRightBorderWall((byte) 14);
                         break;
                     case "East Wall(5) |":
-                        tile.setHorizontalWall((byte) 57);
+                        tile.setRightBorderWall((byte) 57);
                         break;
                     case "East Wall(6) |":
-                        tile.setHorizontalWall((byte) 16);
+                        tile.setRightBorderWall((byte) 16);
                         break;
                     case "East Wall(7) |":
-                        tile.setHorizontalWall((byte) 4);
+                        tile.setRightBorderWall((byte) 4);
                         break;
                     case "Diagonal Wall(1) /":
                         tile.setDiagonalWalls(14);
@@ -351,6 +401,71 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
         }
     }
 
+    public static void drawLine(int x1, int y1, int x2, int y2, Color color) {
+        offscreenGraphics.setColor(color);
+        offscreenGraphics.setStroke(new BasicStroke(2));
+        offscreenGraphics.draw(new Line2D.Double(x1, y1, x2, y2));
+    }
+
+    public static void drawLine(Tile tile, LineLocation lineLocation, Color color) {
+        switch (lineLocation) {
+            case BORDER_TOP:
+                drawLine(
+                        tile.getX(),
+                        tile.getY(),
+                        tile.getX() + TILE_SIZE,
+                        tile.getY(),
+                        color
+                );
+                break;
+            case BORDER_RIGHT:
+                drawLine(
+                        tile.getX() + TILE_SIZE,
+                        tile.getY(),
+                        tile.getX() + TILE_SIZE,
+                        tile.getY() + TILE_SIZE,
+                        color
+                );
+                break;
+            case BORDER_BOTTOM:
+                drawLine(
+                        tile.getX(),
+                        tile.getY() + TILE_SIZE,
+                        tile.getX() + TILE_SIZE,
+                        tile.getY() + TILE_SIZE,
+                        color
+                );
+                break;
+            case BORDER_LEFT:
+                drawLine(
+                        tile.getX(),
+                        tile.getY(),
+                        tile.getX(),
+                        tile.getY() + TILE_SIZE,
+                        color
+                );
+                break;
+            case DIAGONAL_FROM_TOP_LEFT:
+                drawLine(
+                        tile.getX(),
+                        tile.getY(),
+                        tile.getX() + TILE_SIZE,
+                        tile.getY() + TILE_SIZE,
+                        color
+                );
+                break;
+            case DIAGONAL_FROM_TOP_RIGHT:
+                drawLine(
+                        tile.getX() + TILE_SIZE,
+                        tile.getY(),
+                        tile.getX(),
+                        tile.getY() + TILE_SIZE,
+                        color
+                );
+                break;
+        }
+    }
+
     // ONCE AGAIN i failed at getting this to work, i get so confused.
     // Basically what i attempted was to have the Brush over the cursor when u
     // move it
@@ -379,13 +494,14 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
      * } } }
      */
 
+
     /**
      * the Mouse click event.
      */
     public void mouseClicked(MouseEvent e) {
         if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
+            paintStampCursor(e.getPoint(), lastButton, Util.stampSize);
             handleTilePaint(e.getPoint(), lastButton, false);
-
         }
     }
 
@@ -394,20 +510,15 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
      */
     public void mouseDragged(MouseEvent e) {
         if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
-
+            paintStampCursor(e.getPoint(), lastButton, Util.stampSize);
             handleTilePaint(e.getPoint().getLocation(), lastButton, true);
         }
     }
 
     public void mouseMoved(MouseEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
-
+        if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
+            paintStampCursor(e.getPoint(), lastButton, Util.stampSize);
+        }
     }
 
     @Override
@@ -417,13 +528,13 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
+    }
 
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
     }
 }

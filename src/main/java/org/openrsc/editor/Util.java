@@ -5,8 +5,9 @@ import org.openrsc.editor.data.ItemLoc;
 import org.openrsc.editor.data.NpcLoc;
 import org.openrsc.editor.gui.MainWindow;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JOptionPane;
+import java.awt.Color;
+import java.awt.Point;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -26,19 +27,25 @@ import java.util.zip.ZipOutputStream;
 
 public class Util {
 
+    public static final Color WALL_OUTLINE_COLOR = new Color(96, 96, 96);
+    public static int stampSize = 5;
+    private static int fpsCount;
+
     /**
      * A utility method to find a tile in the grid based on a mouseClick. There
      * is some overhead due to bounds-checking, but this is done for safety's
      * sake.
      *
-     * @param mouseClick The mouse click's x/y coordinates.
+     * @param point The mouse click's x/y coordinates.
      * @return The tile found in {@code tileGrid};
      */
-    public static Tile findTileInGrid(Point mouseClick) throws ArrayIndexOutOfBoundsException {
-        final int x = mouseClick.x;
-        final int y = mouseClick.y;
-        if (inCanvas(mouseClick)) {
-            Point tileLocation = new Point(EditorCanvas.GRID_SIZE - x / EditorCanvas.TILE_SIZE, y / EditorCanvas.TILE_SIZE);
+    public static Tile mapCoordsToGridTile(Point point) throws ArrayIndexOutOfBoundsException {
+        return mapCoordsToGridTile(point.x, point.y);
+    }
+
+    public static Tile mapCoordsToGridTile(final int x, final int y) throws ArrayIndexOutOfBoundsException {
+        if (inCanvas(x, y)) {
+            Point tileLocation = mouseCoordsToGridCoords(new Point(x, y));
             try {
                 return EditorCanvas.tileGrid[tileLocation.x][tileLocation.y];
             } catch (Exception e) {
@@ -47,6 +54,13 @@ public class Util {
         } else {
             return null;
         }
+    }
+
+    public static Point mouseCoordsToGridCoords(Point point) {
+        return new Point(
+                EditorCanvas.GRID_SIZE - point.x / EditorCanvas.TILE_SIZE,
+                point.y / EditorCanvas.TILE_SIZE
+        );
     }
 
     /**
@@ -90,10 +104,17 @@ public class Util {
      */
 
     public static boolean inCanvas(Point p) {
+        return inCanvas(p.x, p.y);
+    }
+
+    public static boolean inCanvas(int x, int y) {
         if (!Main.mainWindow.isActive()) {
             return false;
         }
-        return p.x >= 0 && p.y >= 0 && p.x < EditorCanvas.NUM_TILES + EditorCanvas.TILE_SIZE && p.y < EditorCanvas.NUM_TILES;
+        return x >= 0
+                && y >= 0
+                && x < EditorCanvas.NUM_TILES + EditorCanvas.TILE_SIZE
+                && y < EditorCanvas.NUM_TILES;
     }
 
     /**
@@ -156,10 +177,10 @@ public class Util {
      */
     public static void unpack(int sectorX, int sectorY, int sectorH) {
         try {
-            tileArchive = new ZipFile(ourFile);
+            tileArchive = new ZipFile(currentFile);
             ZipEntry e = tileArchive.getEntry("h" + sectorH + "x" + sectorX + "y" + sectorY);
             if (e != null) {
-                ourData = streamToBuffer(new BufferedInputStream(tileArchive.getInputStream(e)));
+                buffer = streamToBuffer(new BufferedInputStream(tileArchive.getInputStream(e)));
             } else {
                 JOptionPane.showConfirmDialog(null, "Sorry, Wrong sector String specified.");
             }
@@ -296,19 +317,19 @@ public class Util {
             List<GameObjectLoc> gameObjectLocs = (LinkedList<GameObjectLoc>) PersistenceManager.load(
                     Util.class.getResourceAsStream("/xml/GameObjectLoc.xml.gz")
             );
-            gameObjectLocs.forEach(go -> Util.objectCoordSet.put(new Point(go.getX(), go.getY()), go));
+            gameObjectLocs.forEach(go -> Util.gameObjectLocationMap.put(new Point(go.getX(), go.getY()), go));
 
             // Adding all NPCs into the hashmap.
             List<NpcLoc> npcLocs = (LinkedList<NpcLoc>) PersistenceManager.load(
                     Util.class.getResourceAsStream("/xml/NpcLoc.xml.gz")
             );
-            npcLocs.forEach(loc -> Util.npcCoordSet.put(new Point(loc.startX, loc.startY()), loc));
+            npcLocs.forEach(loc -> Util.npcLocationMap.put(new Point(loc.startX, loc.startY()), loc));
 
             // Adding all ground Items into hashmap.
             List<ItemLoc> itemLocs = (LinkedList<ItemLoc>) PersistenceManager.load(
                     Util.class.getResourceAsStream("/xml/ItemLoc.xml.gz")
             );
-            itemLocs.forEach(loc -> Util.itemCoordSet.put(new Point(loc.getX(), loc.getY()), loc));
+            itemLocs.forEach(loc -> Util.itemLocationMap.put(new Point(loc.getX(), loc.getY()), loc));
 
             // Getting all the IDs - names, for objects/npcs/items in the
             // hashmaps.
@@ -339,7 +360,7 @@ public class Util {
 
     public static String[] getSectionNames() {
         try {
-            tileArchive = new ZipFile(ourFile);
+            tileArchive = new ZipFile(currentFile);
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -386,15 +407,15 @@ public class Util {
         t.setGroundOverlay((byte) 0);
         t.setGroundTexture((byte) 0);
         t.setGroundTexture((byte) 0);
-        t.setHorizontalWall((byte) 0);
+        t.setRightBorderWall((byte) 0);
         t.setRoofTexture((byte) 0);
-        t.setVerticalWall((byte) 0);
+        t.setTopBorderWall((byte) 0);
     }
 
     public static boolean nullTile(Tile t) {
         return t.getGroundElevation() == 0 && t.getDiagonalWalls() == 0 && t.getGroundOverlay() == 0
-                && t.getGroundTexture() == 0 && t.getHorizontalWall() == 0 && t.getRoofTexture() == 0
-                && t.getVerticalWall() == 0;
+                && t.getGroundTexture() == 0 && t.getRightBorderWall() == 0 && t.getRoofTexture() == 0
+                && t.getTopBorderWall() == 0;
     }
 
     /**
@@ -495,17 +516,17 @@ public class Util {
         getHorizontalWallColor.put((byte) 7, Color.WHITE);
         getHorizontalWallColor.put((byte) 15, Color.WHITE);
         /* Wooden looking Wall */
-        getHorizontalWallColor.put((byte) 57, wallOutline);
+        getHorizontalWallColor.put((byte) 57, WALL_OUTLINE_COLOR);
 
         /* Type of wall is a / */
         getDiagonalWallColorS.put(1, Color.WHITE);
         getDiagonalWallColorS.put(14, Color.WHITE);
         getDiagonalWallColorS.put(3, Color.WHITE);
 
-        getDiagonalWallColorS.put(19, wallOutline);
-        getDiagonalWallColorS.put(17, wallOutline);
-        getDiagonalWallColorS.put(5, wallOutline);
-        getDiagonalWallColorS.put(4, wallOutline);
+        getDiagonalWallColorS.put(19, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorS.put(17, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorS.put(5, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorS.put(4, WALL_OUTLINE_COLOR);
 
         /* Type of wall is a \ */
         getDiagonalWallColorW.put(12001, Color.WHITE);
@@ -513,10 +534,10 @@ public class Util {
 
         getDiagonalWallColorW.put(225, Color.WHITE);
 
-        getDiagonalWallColorW.put(226, wallOutline);
-        getDiagonalWallColorW.put(228, wallOutline);
-        getDiagonalWallColorW.put(229, wallOutline);
-        getDiagonalWallColorW.put(243, wallOutline);
+        getDiagonalWallColorW.put(226, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorW.put(228, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorW.put(229, WALL_OUTLINE_COLOR);
+        getDiagonalWallColorW.put(243, WALL_OUTLINE_COLOR);
 
     }
 
@@ -548,62 +569,93 @@ public class Util {
     public static HashMap<Integer, String> objectNames = new HashMap<>();
     public static HashMap<Integer, String> npcNames = new HashMap<>();
     public static HashMap<Integer, String> itemNames = new HashMap<>();
-    public static HashMap<Point, ItemLoc> itemCoordSet = new HashMap<>();
-    public static HashMap<Point, NpcLoc> npcCoordSet = new HashMap<>();
-    public static HashMap<Point, GameObjectLoc> objectCoordSet = new HashMap<>();
+    public static HashMap<Point, ItemLoc> itemLocationMap = new HashMap<>();
+    public static HashMap<Point, NpcLoc> npcLocationMap = new HashMap<>();
+    public static HashMap<Point, GameObjectLoc> gameObjectLocationMap = new HashMap<>();
     public static HashMap<Integer, Color> getDiagonalWallColorW = new HashMap<>();
     public static HashMap<Integer, Color> getDiagonalWallColorS = new HashMap<>();
     public static HashMap<Byte, Color> getHorizontalWallColor = new HashMap<>();
     public static HashMap<Byte, Color> getVerticalWallColor = new HashMap<>();
     public static HashMap<Byte, Color> getOverlay = new HashMap<>();
-    public static LinkedList<GameObjectLoc> objects;
-    public static LinkedList<GameObjectLoc> npcs;
 
     public static State STATE = State.NOT_LOADED;
     public static boolean toggleInfo = true;
     private static long lastMilli = 0;
-    private static int fpsCount = 0;
     public static Tile oldSelectedTile = null;
     public static boolean eleReady = false;
     public static byte newEle = -1;
     public static int sectorX = 51;
-    public static Color wallOutline = new Color(96, 96, 96);
     public static int sectorY = 50;
     public static Tile selectedTile = null;
     public static Tile copiedTile = null;
     public static int sectorH = 0;
     public static final int FPS = 1;
-    public static boolean sectorChanged = false;
+    public static boolean sectorModified = false;
     public static final int THREAD_DELAY = 8;
-    public static String ourLandscapeFile = null;
-    public static ByteBuffer ourData;
+
+    public static ByteBuffer buffer;
     public static boolean showRoofs = false;
     public static boolean showNpcs = true;
     public static ZipFile tileArchive;
-    public static File ourFile = null;
+    public static File currentFile = null;
     public static boolean MAP_BRIGHTNESS_LIGHT = false;
 
-    public static final Object[] BRUSH_LIST = new Object[]{"None", "Configure your own", "---------Tile Tools-----------", "Delete Tile",
-            "Remove North Wall", "Remove East Wall", "Remove Diagonal Wall", "Remove Overlay", "Remove Roof",
-            "---------Tile Walls----------", "North Wall(0) -", "North Wall(1) -", "North Wall(2) -",
-            "North Wall(3) -", "North Wall(4) -", "North Wall(5) -", "North Wall(6) -", "North Wall(7) -",
+    public static final Object[] BRUSH_LIST = new Object[]{
+            "None",
+            "Configure your own",
 
-            "East Wall(0) |", "East Wall(1) |", "East Wall(2) |", "East Wall(3) |", "East Wall(4) |", "East Wall(5) |",
-            "East Wall(6) |", "East Wall(7) |",
+            "---------Tile Tools-----------",
+            "Delete Tile",
+            "Remove North Wall",
+            "Remove East Wall",
+            "Remove Diagonal Wall",
+            "Remove Overlay",
+            "Remove Roof",
 
-            "Diagonal Wall(0) /", "Diagonal Wall(1) /", "Diagonal Wall(2) /", "Diagonal Wall(3) /",
-            "Diagonal Wall(4) /", "Diagonal Wall(5) /", "Diagonal Wall(6) /",
-
+            "---------Tile Walls----------",
+            "North Wall(0) -",
+            "North Wall(1) -",
+            "North Wall(2) -",
+            "North Wall(3) -",
+            "North Wall(4) -",
+            "North Wall(5) -",
+            "North Wall(6) -",
+            "North Wall(7) -",
+            "East Wall(0) |",
+            "East Wall(1) |",
+            "East Wall(2) |",
+            "East Wall(3) |",
+            "East Wall(4) |",
+            "East Wall(5) |",
+            "East Wall(6) |",
+            "East Wall(7) |",
+            "Diagonal Wall(0) /",
+            "Diagonal Wall(1) /",
+            "Diagonal Wall(2) /",
+            "Diagonal Wall(3) /",
+            "Diagonal Wall(4) /",
+            "Diagonal Wall(5) /",
+            "Diagonal Wall(6) /",
             "Diagonal Wall(0) \\",
 
-            "----------Tile Overlays-------", "Grass", "Grey Path", "Water", "Wooden Floor", "Dark Red Bank Floor",
-            "Black Floor", "-------------Others-----------", "Roof", "Elevation"};
+            "----------Tile Overlays-------",
+            "Grass",
+            "Grey Path",
+            "Water",
+            "Wooden Floor",
+            "Dark Red Bank Floor",
+            "Black Floor",
+
+            "-------------Others-----------",
+            "Roof",
+            "Elevation"
+    };
 
     /**
      * The array that holds all the RGB colors for each Tile's groundTexture
      * value.
      */
-    public static Color[] colorArray = {new Color(255, 255, 255), new Color(251, 254, 251), new Color(247, 252, 247),
+    public static final Color[] colorArray = {new Color(255, 255, 255), new Color(251, 254, 251), new Color(247, 252, 247),
             new Color(243, 250, 243), new Color(239, 248, 239), new Color(235, 247, 235), new Color(231, 245, 231),
             new Color(227, 243, 227), new Color(223, 241, 223), new Color(219, 240, 219), new Color(215, 238, 215),
             new Color(211, 236, 211), new Color(207, 234, 207), new Color(203, 233, 203), new Color(199, 231, 199),

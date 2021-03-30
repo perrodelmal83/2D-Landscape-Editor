@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 public class Actions {
     // Open Landscape.
     public static void onOpenLandscape(File file) {
-        Util.ourFile = file;
+        Util.currentFile = file;
     }
 
     public static void onOpenSection() {
@@ -43,8 +43,8 @@ public class Actions {
     public static void onPaste() {
         if (Util.copiedTile != null) {
             Util.selectedTile.setDiagonalWalls(Util.copiedTile.getDiagonalWalls());
-            Util.selectedTile.setVerticalWall(Util.copiedTile.getVerticalWall());
-            Util.selectedTile.setHorizontalWall(Util.copiedTile.getHorizontalWall());
+            Util.selectedTile.setTopBorderWall(Util.copiedTile.getTopBorderWall());
+            Util.selectedTile.setRightBorderWall(Util.copiedTile.getRightBorderWall());
             Util.selectedTile.setGroundElevation(Util.copiedTile.getGroundElevation());
             Util.selectedTile.setGroundTexture(Util.copiedTile.getGroundTexture());
             Util.selectedTile.setRoofTexture(Util.copiedTile.getRoofTexture());
@@ -119,21 +119,21 @@ public class Actions {
     }
 
     public static void promptSaveIfChangesPresent() {
-        if (Util.sectorChanged
+        if (Util.sectorModified
                 && Util.tileArchive != null
                 && JOptionPane.showConfirmDialog(
                 null,
                 "Changes have been made to this Section\r\nDo you wish to save the current map?", "Saving", 0) == 0) {
             if (Util.save()) {
-                Util.sectorChanged = false;
+                Util.sectorModified = false;
             } else {
                 JOptionPane.showMessageDialog(
                         null,
-                        "Failed to saved to " + Util.ourFile.getPath()
+                        "Failed to saved to " + Util.currentFile.getPath()
                 );
             }
         } else {
-            Util.sectorChanged = false;
+            Util.sectorModified = false;
         }
     }
 }
