@@ -1,6 +1,8 @@
 package org.openrsc.editor;
 
-import javax.swing.*;
+import org.openrsc.editor.gui.MoveDirection;
+
+import javax.swing.JOptionPane;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,8 +45,8 @@ public class Actions {
     public static void onPaste() {
         if (Util.copiedTile != null) {
             Util.selectedTile.setDiagonalWalls(Util.copiedTile.getDiagonalWalls());
-            Util.selectedTile.setTopBorderWall(Util.copiedTile.getTopBorderWall());
-            Util.selectedTile.setRightBorderWall(Util.copiedTile.getRightBorderWall());
+            Util.selectedTile.setNorthWall(Util.copiedTile.getTopBorderWall());
+            Util.selectedTile.setEastWall(Util.copiedTile.getRightBorderWall());
             Util.selectedTile.setGroundElevation(Util.copiedTile.getGroundElevation());
             Util.selectedTile.setGroundTexture(Util.copiedTile.getGroundTexture());
             Util.selectedTile.setRoofTexture(Util.copiedTile.getRoofTexture());

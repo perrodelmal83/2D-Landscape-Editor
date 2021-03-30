@@ -1,6 +1,15 @@
-package org.openrsc.editor;
+package org.openrsc.editor.gui.graphics;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import org.openrsc.editor.Main;
+import org.openrsc.editor.Tile;
+import org.openrsc.editor.Util;
+import org.openrsc.editor.event.EventBusFactory;
+import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
 import org.openrsc.editor.gui.MainWindow;
+import org.openrsc.editor.model.TerrainProperty;
+import org.openrsc.editor.model.TerrainTemplate;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -29,11 +38,16 @@ import java.util.Optional;
 
 public class EditorCanvas implements Runnable, MouseListener, MouseMotionListener {
 
-    JFrame ourFrame;
+    private static final EventBus eventBus = EventBusFactory.getEventBus();
+
+    public TerrainTemplate currentTemplate = TerrainTemplate.builder().build();
+    private JFrame frame;
     private Graphics2D g2d;
     public static JPanel panel;
+
     private BufferedImage offscreenImage;
     public static Graphics2D offscreenGraphics;
+
     private Dimension offscreenDimension;
     /**
      * 2-Dimensional array used to hold Tile objects for easy access.
@@ -46,7 +60,7 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
     /**
      * The number of x/y coordinates in a tile.
      */
-    public static final int TILE_SIZE = 11;
+    public static final int TILE_SIZE = 16;
     /**
      * The total number of x/y coordinates in the tileGrid.
      */
@@ -60,6 +74,7 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
      */
     public EditorCanvas(final JFrame frame) {
         init(frame);
+        eventBus.register(this);
     }
 
     /**
@@ -77,9 +92,8 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
             panel.setLocation(-10, 0);
             panel.setSize(NUM_TILES + TILE_SIZE, NUM_TILES);
             panel.setBackground(Color.BLACK);
-            ourFrame = frame;
-            ourFrame.setSize(ourFrame.getSize().width, ourFrame.getSize().height - 19);
-            ourFrame.add(panel);
+            this.frame = frame;
+            this.frame.add(panel);
             Util.prepareData();
 
         } catch (Exception e) {
@@ -127,7 +141,7 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
                 Main.mainWindow.setTitle("RSC Landscape Editor" + " - " + " Sector: " + "h"
                         + Util.sectorH + "x" + Util.sectorX + "y" + Util.sectorY);
                 curTime += Util.THREAD_DELAY;
-                Thread.sleep(Constants.SLEEP_DELAY_MS);
+                Thread.sleep(GraphicsControls.SLEEP_DELAY_MS);
             }
         } catch (Exception e) {
             Util.error(e);
@@ -253,151 +267,42 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
             Util.sectorModified = true;
         }
 
-        hoverTiles.forEach(this::checkPaint);
+        hoverTiles.forEach(this::applyBrush);
         Util.updateText(tile);
         Util.selectedTile = tile;
         Util.STATE = Util.State.FORCE_FULL_RENDER;
-
     }
 
     /**
-     * Checks and handles Weather the Tile needs to be Painted.
+     * Applies the TileTemplate from the brush
      *
      * @param tile - the new Tile object to update
      */
-    private void checkPaint(Tile tile) {
-        try {
-            if (tile != null) {
-                final String selected = MainWindow.brushes.getSelectedItem().toString();
-                switch (selected) {
-                    case "Configure your own":
-                        tile.setGroundTexture((byte) MainWindow.textureJS.getValue());
-                        tile.setDiagonalWalls(MainWindow.diagonalWallJS.getValue());
-                        tile.setTopBorderWall((byte) MainWindow.verticalWallJS.getValue());
-                        tile.setRightBorderWall((byte) MainWindow.horizontalWallJS.getValue());
-                        tile.setGroundOverlay((byte) MainWindow.overlayJS.getValue());
-                        tile.setRoofTexture((byte) MainWindow.roofTextureJS.getValue());
-                        tile.setGroundElevation((byte) MainWindow.elevationJS.getValue());
-                        break;
-                    case "Delete Tile":
-                        Util.clearTile(tile);
-                        break;
-                    case "Remove North Wall":
-                        tile.setTopBorderWall((byte) 0);
-                        break;
-                    case "Remove East Wall":
-                        tile.setRightBorderWall((byte) 0);
-                        break;
-                    case "Remove Diagonal Wall":
-                        tile.setDiagonalWalls(0);
-                        break;
-                    case "Remove Overlay":
-                        tile.setGroundOverlay((byte) 0);
-                        break;
-                    case "Remove Roof":
-                        tile.setRoofTexture((byte) 0);
-                        break;
-                    case "Grey Path":
-                        tile.setGroundOverlay((byte) 1);
-                        break;
-                    case "Water":
-                        tile.setGroundOverlay((byte) 2);
-                        break;
-                    case "Wooden Floor":
-                        tile.setGroundOverlay((byte) 3);
-                        break;
-                    case "Dark Red Bank Floor":
-                        tile.setGroundOverlay((byte) 6);
-                        break;
-                    case "Black Floor":
-                        tile.setGroundOverlay((byte) 16);
-                        break;
-                    case "North Wall(0) -":
-                        tile.setTopBorderWall((byte) 15);
-                        break;
-                    case "East Wall(0) |":
-                        tile.setRightBorderWall((byte) 15);
-                        break;
-                    case "Diagonal Wall(0) /":
-                        tile.setDiagonalWalls(1);
-                        break;
-                    case "North Wall(1) -":
-                        tile.setTopBorderWall((byte) 5);
-                        break;
-                    case "North Wall(2) -":
-                        tile.setTopBorderWall((byte) 1);
-                        break;
-                    case "North Wall(3) -":
-                        tile.setTopBorderWall((byte) 7);
-                        break;
-                    case "North Wall(4) -":
-                        tile.setTopBorderWall((byte) 14);
-                        break;
-                    case "North Wall(5) -":
-                        tile.setTopBorderWall((byte) 57);
-                        break;
-                    case "North Wall(6) -":
-                        tile.setTopBorderWall((byte) 16);
-                        break;
-                    case "North Wall(7) -":
-                        tile.setTopBorderWall((byte) 4);
-                        break;
-                    case "East Wall(1) |":
-                        tile.setRightBorderWall((byte) 5);
-                        break;
-                    case "East Wall(2) |":
-                        tile.setRightBorderWall((byte) 1);
-                        break;
-                    case "East Wall(3) |":
-                        tile.setRightBorderWall((byte) 7);
-                        break;
-                    case "East Wall(4) |":
-                        tile.setRightBorderWall((byte) 14);
-                        break;
-                    case "East Wall(5) |":
-                        tile.setRightBorderWall((byte) 57);
-                        break;
-                    case "East Wall(6) |":
-                        tile.setRightBorderWall((byte) 16);
-                        break;
-                    case "East Wall(7) |":
-                        tile.setRightBorderWall((byte) 4);
-                        break;
-                    case "Diagonal Wall(1) /":
-                        tile.setDiagonalWalls(14);
-                        break;
-                    case "Diagonal Wall(2) /":
-                        tile.setDiagonalWalls(3);
-                        break;
-                    case "Diagonal Wall(3) /":
-                        tile.setDiagonalWalls(19);
-                        break;
-                    case "Diagonal Wall(4) /":
-                        tile.setDiagonalWalls(17);
-                        break;
-                    case "Diagonal Wall(5) /":
-                        tile.setDiagonalWalls(5);
-                        break;
-                    case "Diagonal Wall(6) /":
-                        tile.setDiagonalWalls(4);
-                        break;
-                    case "Diagonal Wall(0) \\":
-                        tile.setDiagonalWalls(12004);
-                        break;
-                    case "Grass":
-                        tile.setGroundTexture((byte) 70);
-                        break;
-                    case "Roof":
-                        tile.setRoofTexture((byte) 1);
-                        break;
-                }
-                if (Util.eleReady) {
-                    tile.setGroundElevation(Util.newEle);
-                }
+    private void applyBrush(Tile tile) {
+        if (tile != null) {
+            currentTemplate.getValues().entrySet().forEach(entry -> {
+                TerrainProperty property = entry.getKey();
+                Integer value = entry.getValue();
 
-            }
-        } catch (Exception e) {
-            Util.error(e);
+                switch (property) {
+                    case GROUND_TEXTURE:
+                        tile.setGroundTexture(value.byteValue());
+                        break;
+                    case GROUND_OVERLAY:
+                        tile.setGroundOverlay(value.byteValue());
+                        break;
+                    case WALL_DIAGONAL:
+                        tile.setDiagonalWalls(value);
+                    case WALL_EAST:
+                        tile.setEastWall(value.byteValue());
+                    case WALL_NORTH:
+                        tile.setNorthWall(value.byteValue());
+                    case GROUND_ELEVATION:
+                        tile.setGroundElevation(value.byteValue());
+                    case ROOF_TEXTURE:
+                        tile.setRoofTexture(value.byteValue());
+                }
+            });
         }
     }
 
@@ -466,38 +371,6 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
         }
     }
 
-    // ONCE AGAIN i failed at getting this to work, i get so confused.
-    // Basically what i attempted was to have the Brush over the cursor when u
-    // move it
-    // like the sims, or age of empires style kinda.
-
-    /*
-     * int lastPos = -1; int lastLane = -1; Tile lastTile = null; public void
-     * mouseMoved(MouseEvent e) { if(Util.STATE == Util.State.RENDER_READY) {
-     * Tile tile = Util.findTileInGrid(e.getPoint().getLocation());
-     *
-     * if((tile.lane != lastLane && tile.position != lastPos) || lastTile ==
-     * null) { if(lastTile == null) { lastPos = tile.position; lastLane =
-     * tile.lane; lastTile = tile; } // Revert the old tile back to how it was
-     * try {
-     *
-     * } catch (Exception r) { System.out.println(r); }
-     * //tileGrid[lastLane][lastPos].lane = lastTile.lane;
-     * tileGrid[lastLane][lastPos] = lastTile;
-     *
-     * //lastTile.getClass().
-     *
-     *
-     * tile.setGroundOverlay((byte)2); Util.selectedTile = tile; Util.STATE =
-     * Util.State.TILE_NEEDS_UPDATING; lastTile = tile; } else {
-     *
-     * } } }
-     */
-
-
-    /**
-     * the Mouse click event.
-     */
     public void mouseClicked(MouseEvent e) {
         if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
             paintStampCursor(e.getPoint(), lastButton, Util.stampSize);
@@ -505,9 +378,6 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
         }
     }
 
-    /**
-     * the mouse Drag event
-     */
     public void mouseDragged(MouseEvent e) {
         if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
             paintStampCursor(e.getPoint(), lastButton, Util.stampSize);
@@ -536,5 +406,10 @@ public class EditorCanvas implements Runnable, MouseListener, MouseMotionListene
 
     @Override
     public void mouseExited(MouseEvent mouseEvent) {
+    }
+
+    @Subscribe
+    public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
+        this.currentTemplate = event.getTemplate();
     }
 }

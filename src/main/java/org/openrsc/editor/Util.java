@@ -3,7 +3,7 @@ package org.openrsc.editor;
 import org.openrsc.editor.data.GameObjectLoc;
 import org.openrsc.editor.data.ItemLoc;
 import org.openrsc.editor.data.NpcLoc;
-import org.openrsc.editor.gui.MainWindow;
+import org.openrsc.editor.gui.graphics.EditorCanvas;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;
@@ -397,75 +397,49 @@ public class Util {
     }
 
     /**
-     * Clears all values on the selected tile
-     *
-     * @param t - the given Tile object
-     */
-    public static void clearTile(Tile t) {
-        t.setDiagonalWalls(0);
-        t.setGroundElevation((byte) 0);
-        t.setGroundOverlay((byte) 0);
-        t.setGroundTexture((byte) 0);
-        t.setGroundTexture((byte) 0);
-        t.setRightBorderWall((byte) 0);
-        t.setRoofTexture((byte) 0);
-        t.setTopBorderWall((byte) 0);
-    }
-
-    public static boolean nullTile(Tile t) {
-        return t.getGroundElevation() == 0 && t.getDiagonalWalls() == 0 && t.getGroundOverlay() == 0
-                && t.getGroundTexture() == 0 && t.getRightBorderWall() == 0 && t.getRoofTexture() == 0
-                && t.getTopBorderWall() == 0;
-    }
-
-    /**
      * Updates the Text on the GUI to set the new tile values
      *
      * @param tile - the Tile to update.
      */
     public static void updateText(Tile tile) {
-        Point rscTile = tile.getRSCCoords();
-
-        if (!toggleInfo) {
-            // show rsc data
-            MainWindow.tile.setText("RSC Coords: " + rscTile.x + ", " + rscTile.y);
-
-            if (tile.getTileObject() != null) {
-                MainWindow.elevation.setText("ObjectID: " + tile.getTileObject().getId());
-                MainWindow.roofTexture.setText("Object Name: " + tile.getTileObject().getName());
-            } else {
-                MainWindow.elevation.setText("");
-                MainWindow.roofTexture.setText("");
-            }
-            if (tile.getTileNpc() != null) {
-                MainWindow.overlay.setText("NpcID: " + tile.getTileNpc().getId());
-                MainWindow.horizontalWall.setText("Npc Name: " + tile.getTileNpc().getName());
-            } else {
-                MainWindow.overlay.setText("");
-                MainWindow.horizontalWall.setText("");
-            }
-            if (tile.getTileItem() != null) {
-                MainWindow.verticalWall.setText("ItemID: " + tile.getTileItem().getId());
-                MainWindow.diagonalWall.setText("Item Name: " + tile.getTileItem().getName());
-            } else {
-                MainWindow.verticalWall.setText("");
-                MainWindow.diagonalWall.setText("");
-            }
-        } else {
-            // show advanced tile data
-            MainWindow.tile.setText("Selected tile info: " + "\nID: " + tile.getID());
-            MainWindow.elevation.setText("Ground Elevation: " + tile.getGroundElevationInt());
-            MainWindow.overlay.setText("Ground Overlay: " + tile.getGroundOverlayInt());
-            MainWindow.roofTexture.setText("Roof Texture: " + tile.getRoofTexture());
-            MainWindow.groundtexture.setText("GroundTexture: " + tile.getGroundTextureInt());
-            MainWindow.diagonalWall.setText("Diagonal Wall: " + tile.getDiagonalWallsInt());
-            MainWindow.verticalWall.setText("Vertical Wall: " + tile.getVerticalWallInt());
-            MainWindow.horizontalWall.setText("Horizontal Wall: " + tile.getHorizontalWallInt());
-        }
-    }
-
-    public static void doFastEvents() {
-        MainWindow.brushes.getSelectedItem();
+//        Point rscTile = tile.getRSCCoords();
+//
+//        if (!toggleInfo) {
+//            // show rsc data
+//            MainWindow.tile.setText("RSC Coords: " + rscTile.x + ", " + rscTile.y);
+//
+//            if (tile.getTileObject() != null) {
+//                MainWindow.elevation.setText("ObjectID: " + tile.getTileObject().getId());
+//                MainWindow.roofTexture.setText("Object Name: " + tile.getTileObject().getName());
+//            } else {
+//                MainWindow.elevation.setText("");
+//                MainWindow.roofTexture.setText("");
+//            }
+//            if (tile.getTileNpc() != null) {
+//                MainWindow.overlay.setText("NpcID: " + tile.getTileNpc().getId());
+//                MainWindow.horizontalWall.setText("Npc Name: " + tile.getTileNpc().getName());
+//            } else {
+//                MainWindow.overlay.setText("");
+//                MainWindow.horizontalWall.setText("");
+//            }
+//            if (tile.getTileItem() != null) {
+//                MainWindow.verticalWall.setText("ItemID: " + tile.getTileItem().getId());
+//                MainWindow.diagonalWall.setText("Item Name: " + tile.getTileItem().getName());
+//            } else {
+//                MainWindow.verticalWall.setText("");
+//                MainWindow.diagonalWall.setText("");
+//            }
+//        } else {
+//            // show advanced tile data
+//            MainWindow.tile.setText("Selected tile info: " + "\nID: " + tile.getID());
+//            MainWindow.elevation.setText("Ground Elevation: " + tile.getGroundElevationInt());
+//            MainWindow.overlay.setText("Ground Overlay: " + tile.getGroundOverlayInt());
+//            MainWindow.roofTexture.setText("Roof Texture: " + tile.getRoofTexture());
+//            MainWindow.groundtexture.setText("GroundTexture: " + tile.getGroundTextureInt());
+//            MainWindow.diagonalWall.setText("Diagonal Wall: " + tile.getDiagonalWallsInt());
+//            MainWindow.verticalWall.setText("Vertical Wall: " + tile.getVerticalWallInt());
+//            MainWindow.horizontalWall.setText("Horizontal Wall: " + tile.getHorizontalWallInt());
+//        }
     }
 
     /**
@@ -599,57 +573,6 @@ public class Util {
     public static ZipFile tileArchive;
     public static File currentFile = null;
     public static boolean MAP_BRIGHTNESS_LIGHT = false;
-
-    public static final Object[] BRUSH_LIST = new Object[]{
-            "None",
-            "Configure your own",
-
-            "---------Tile Tools-----------",
-            "Delete Tile",
-            "Remove North Wall",
-            "Remove East Wall",
-            "Remove Diagonal Wall",
-            "Remove Overlay",
-            "Remove Roof",
-
-            "---------Tile Walls----------",
-            "North Wall(0) -",
-            "North Wall(1) -",
-            "North Wall(2) -",
-            "North Wall(3) -",
-            "North Wall(4) -",
-            "North Wall(5) -",
-            "North Wall(6) -",
-            "North Wall(7) -",
-            "East Wall(0) |",
-            "East Wall(1) |",
-            "East Wall(2) |",
-            "East Wall(3) |",
-            "East Wall(4) |",
-            "East Wall(5) |",
-            "East Wall(6) |",
-            "East Wall(7) |",
-            "Diagonal Wall(0) /",
-            "Diagonal Wall(1) /",
-            "Diagonal Wall(2) /",
-            "Diagonal Wall(3) /",
-            "Diagonal Wall(4) /",
-            "Diagonal Wall(5) /",
-            "Diagonal Wall(6) /",
-            "Diagonal Wall(0) \\",
-
-            "----------Tile Overlays-------",
-            "Grass",
-            "Grey Path",
-            "Water",
-            "Wooden Floor",
-            "Dark Red Bank Floor",
-            "Black Floor",
-
-            "-------------Others-----------",
-            "Roof",
-            "Elevation"
-    };
 
     /**
      * The array that holds all the RGB colors for each Tile's groundTexture

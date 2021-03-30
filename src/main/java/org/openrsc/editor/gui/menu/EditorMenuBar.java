@@ -2,10 +2,9 @@ package org.openrsc.editor.gui.menu;
 
 import org.openrsc.editor.Actions;
 
-import javax.swing.*;
+import javax.swing.JMenuBar;
 
 public class EditorMenuBar extends JMenuBar {
-
     public EditorMenuBar() {
         super();
         this.add(

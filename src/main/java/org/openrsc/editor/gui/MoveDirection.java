@@ -1,4 +1,4 @@
-package org.openrsc.editor;
+package org.openrsc.editor.gui;
 
 public enum MoveDirection {
     UP,

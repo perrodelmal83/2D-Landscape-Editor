@@ -3,6 +3,8 @@ package org.openrsc.editor;
 import org.openrsc.editor.data.GameObjectLoc;
 import org.openrsc.editor.data.ItemLoc;
 import org.openrsc.editor.data.NpcLoc;
+import org.openrsc.editor.gui.graphics.EditorCanvas;
+import org.openrsc.editor.gui.graphics.LineLocation;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -12,7 +14,7 @@ import java.awt.Shape;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.openrsc.editor.EditorCanvas.TILE_SIZE;
+import static org.openrsc.editor.gui.graphics.EditorCanvas.TILE_SIZE;
 
 /**
  * @author xEnt/Vrunk/Peter the Properties/values that each RSC Tile holds.
@@ -147,7 +149,7 @@ public class Tile {
     /**
      * @param rightBorderWall the horizontalWall to set
      */
-    public void setRightBorderWall(byte rightBorderWall) {
+    public void setEastWall(byte rightBorderWall) {
         this.rightBorderWall = rightBorderWall;
     }
 
@@ -169,7 +171,7 @@ public class Tile {
      * @param topBorderWall the verticalWall to set
      */
 
-    public void setTopBorderWall(byte topBorderWall) {
+    public void setNorthWall(byte topBorderWall) {
         this.topBorderWall = topBorderWall;
     }
 
@@ -295,8 +297,9 @@ public class Tile {
         // paints Tile ground data.
         if (this.getGroundTextureInt() >= 0) {
             int ourb = this.getGroundTextureInt();
-            offscreenGraphics.setColor(Util.MAP_BRIGHTNESS_LIGHT ? Util.colorArray[ourb] : Util.colorArray[ourb]
-                    .darker().darker());
+            offscreenGraphics.setColor(
+                    Util.MAP_BRIGHTNESS_LIGHT ? Util.colorArray[ourb] : Util.colorArray[ourb].darker().darker()
+            );
             offscreenGraphics.fill(this.getShape());
             offscreenGraphics.draw(this.getShape());
         }
@@ -426,14 +429,4 @@ public class Tile {
     private byte rightBorderWall = -1;
     private byte topBorderWall = -1;
     private int diagonalWalls = -1;
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Tile) {
-            return ((Tile) obj).getRSCCoords().equals(this.getRSCCoords());
-        }
-        return false;
-    }
-
-
 }

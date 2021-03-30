@@ -1,17 +1,33 @@
 package org.openrsc.editor.gui;
 
+import com.google.common.eventbus.EventBus;
 import org.openrsc.editor.Actions;
-import org.openrsc.editor.EditorCanvas;
-import org.openrsc.editor.MoveDirection;
 import org.openrsc.editor.Util;
+import org.openrsc.editor.event.EventBusFactory;
+import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
+import org.openrsc.editor.gui.controls.TileControlPanel;
+import org.openrsc.editor.gui.graphics.EditorCanvas;
 import org.openrsc.editor.gui.menu.EditorMenuBar;
+import org.openrsc.editor.model.BrushOption;
 
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.Timer;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 
 /**
  * @author xEnt/Vrunk/Peter GUI designed with JFormDesigner. Some stuff done by
@@ -20,9 +36,11 @@ import java.awt.event.ActionListener;
 public class MainWindow extends JFrame {
     public static int rotation = 0;
     public static Timer timer = null;
+    private static final EventBus eventBus = EventBusFactory.getEventBus();
 
     public MainWindow() {
         super();
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
@@ -46,26 +64,16 @@ public class MainWindow extends JFrame {
         EditorMenuBar menuBar = new EditorMenuBar();
         setJMenuBar(menuBar);
 
-        final JLabel textureLabel = new JLabel();
-        textureLabel.setVisible(true);
-        textureLabel.setText("Texture: 0");
-        textureLabel.setLocation(800 - 263, 37);
-        textureLabel.setSize(200, 20);
-        add(textureLabel);
+        TileControlPanel tileControlPanel = new TileControlPanel(800, 37);
+        add(tileControlPanel);
 
         int temp = 30;
-        final JLabel diagonalWallLabel = new JLabel();
-        diagonalWallLabel.setVisible(false);
-        diagonalWallLabel.setText("Diagonal wall: 0");
-        diagonalWallLabel.setLocation(800 - 263, 37 + temp);
-        diagonalWallLabel.setSize(200, 20);
-        add(diagonalWallLabel);
 
         temp += 30;
         final JLabel verticalWallLabel = new JLabel();
         verticalWallLabel.setVisible(false);
         verticalWallLabel.setText("Vertical wall: 0");
-        verticalWallLabel.setLocation(800 - 263, 37 + temp);
+        verticalWallLabel.setLocation(800 - 263, 67 + temp);
         verticalWallLabel.setSize(200, 20);
         add(verticalWallLabel);
 
@@ -73,7 +81,7 @@ public class MainWindow extends JFrame {
         final JLabel horizontalWallLabel = new JLabel();
         horizontalWallLabel.setVisible(false);
         horizontalWallLabel.setText("Horizontal wall: 0");
-        horizontalWallLabel.setLocation(800 - 263, 37 + temp);
+        horizontalWallLabel.setLocation(800 - 263, 67 + temp);
         horizontalWallLabel.setSize(200, 20);
         add(horizontalWallLabel);
 
@@ -81,7 +89,7 @@ public class MainWindow extends JFrame {
         final JLabel overlayLabel = new JLabel();
         overlayLabel.setVisible(false);
         overlayLabel.setText("Overlay: 0");
-        overlayLabel.setLocation(800 - 263, 37 + temp);
+        overlayLabel.setLocation(800 - 263, 67 + temp);
         overlayLabel.setSize(200, 20);
         add(overlayLabel);
 
@@ -89,7 +97,7 @@ public class MainWindow extends JFrame {
         final JLabel roofTextureLabel = new JLabel();
         roofTextureLabel.setVisible(false);
         roofTextureLabel.setText("Roof texture: 0");
-        roofTextureLabel.setLocation(800 - 263, 37 + temp);
+        roofTextureLabel.setLocation(800 - 263, 67 + temp);
         roofTextureLabel.setSize(200, 20);
         add(roofTextureLabel);
 
@@ -97,7 +105,7 @@ public class MainWindow extends JFrame {
         final JLabel elevationLabel = new JLabel();
         elevationLabel.setVisible(false);
         elevationLabel.setText("Elevation: 0");
-        elevationLabel.setLocation(800 - 263, 37 + temp);
+        elevationLabel.setLocation(800 - 263, 67 + temp);
         elevationLabel.setSize(200, 20);
         add(elevationLabel);
 
@@ -105,56 +113,10 @@ public class MainWindow extends JFrame {
         /**
          * TODO just adding a mark here so i can find easier.
          */
-        textureJS = new JSlider();
-        textureJS.setSize(250, 30);
-        textureJS.setVisible(true);
-        textureJS.setLocation(816 - 201, 17 + 20);
-        textureJS.setEnabled(true);
-        textureJS.setOrientation(JSlider.HORIZONTAL);
-        textureJS.setMinorTickSpacing(5);
-        textureJS.setMaximum(254);
-        textureJS.setPaintTicks(true);
-        textureJS.setPaintTrack(true);
-        textureJS.setMinimum(0);
-        textureJS.setValue(0);
-        textureJS.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                textureLabel.setText("Texture (" + textureJS.getValue() + ")");
-                if (Util.STATE == Util.State.RENDER_READY || Util.STATE == Util.State.TILE_NEEDS_UPDATING) {
-                    if (Util.selectedTile != null && !brushes.getSelectedItem().equals("Configure your own")) {
-                        MainWindow.groundtexture.setText("GroundTexture: " + Util.selectedTile.getGroundTextureInt());
-                        Util.selectedTile.setGroundTexture((byte) (textureJS.getValue() - 0xff));
-                        Util.STATE = Util.State.TILE_NEEDS_UPDATING;
-                    }
-                }
-            }
-        });
-        add(textureJS);
-        temp = 30;
 
-        diagonalWallJS = new JSlider();
-        diagonalWallJS.setSize(230, 30);
-        diagonalWallJS.setLocation(816 - 181, 17 + 20 + temp);
-        diagonalWallJS.setVisible(false);
-        diagonalWallJS.setEnabled(true);
-        diagonalWallJS.setValue(0);
-        diagonalWallJS.setOrientation(JSlider.HORIZONTAL);
-        diagonalWallJS.setMinorTickSpacing(5);
-        diagonalWallJS.setMaximum(254);
-        diagonalWallJS.setPaintTicks(true);
-        diagonalWallJS.setPaintTrack(true);
-        diagonalWallJS.setMinimum(0);
-        diagonalWallJS.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                diagonalWallLabel.setText("Diagonal wall: " + diagonalWallJS.getValue() + "");
-            }
-        });
-        add(diagonalWallJS);
-
-        temp += 30;
         verticalWallJS = new JSlider();
         verticalWallJS.setSize(230, 30);
-        verticalWallJS.setLocation(816 - 181, 17 + 20 + temp);
+        verticalWallJS.setLocation(816 - 181, 67 + temp);
         verticalWallJS.setVisible(false);
         verticalWallJS.setEnabled(true);
         verticalWallJS.setValue(0);
@@ -174,7 +136,7 @@ public class MainWindow extends JFrame {
         temp += 30;
         horizontalWallJS = new JSlider();
         horizontalWallJS.setSize(220, 30);
-        horizontalWallJS.setLocation(816 - 171, 17 + 20 + temp);
+        horizontalWallJS.setLocation(816 - 171, 67 + temp);
         horizontalWallJS.setVisible(false);
         horizontalWallJS.setEnabled(true);
         horizontalWallJS.setValue(0);
@@ -194,7 +156,7 @@ public class MainWindow extends JFrame {
         temp += 30;
         overlayJS = new JSlider();
         overlayJS.setSize(220, 30);
-        overlayJS.setLocation(816 - 171, 17 + 20 + temp);
+        overlayJS.setLocation(816 - 171, 67 + temp);
         overlayJS.setVisible(false);
         overlayJS.setEnabled(true);
         overlayJS.setValue(0);
@@ -214,7 +176,7 @@ public class MainWindow extends JFrame {
         temp += 30;
         roofTextureJS = new JSlider();
         roofTextureJS.setSize(220, 30);
-        roofTextureJS.setLocation(816 - 171, 17 + 20 + temp);
+        roofTextureJS.setLocation(816 - 171, 67 + temp);
         roofTextureJS.setVisible(false);
         roofTextureJS.setEnabled(true);
         roofTextureJS.setValue(0);
@@ -234,7 +196,7 @@ public class MainWindow extends JFrame {
         temp += 30;
         elevationJS = new JSlider();
         elevationJS.setSize(220, 30);
-        elevationJS.setLocation(816 - 171, 17 + 20 + temp);
+        elevationJS.setLocation(816 - 171, 67 + temp);
         elevationJS.setVisible(false);
         elevationJS.setEnabled(true);
         elevationJS.setValue(0);
@@ -307,7 +269,7 @@ public class MainWindow extends JFrame {
                         GroupLayout.DEFAULT_SIZE, 523, Short.MAX_VALUE).addContainerGap()));
         int size = 3;
 
-        setSize(870, 600);
+        setSize(1200, 1000);
 
         /**
          * Below are the Sector left/right/up/down buttons.
@@ -315,7 +277,7 @@ public class MainWindow extends JFrame {
         JLabel sectorLabel = new JLabel();
         sectorLabel.setSize(200, 30);
         sectorLabel.setText("Move Sector");
-        sectorLabel.setLocation(565, 396);
+        sectorLabel.setLocation(865, 396);
         sectorLabel.setVisible(true);
         add(sectorLabel);
 
@@ -335,7 +297,7 @@ public class MainWindow extends JFrame {
             // Move sector left.
             Actions.onMove(MoveDirection.LEFT);
         });
-        sectorLeft.setLocation(532, 450 + 10);
+        sectorLeft.setLocation(800, 450 + 10);
         sectorLeft.setVisible(true);
         add(sectorLeft);
 
@@ -352,7 +314,7 @@ public class MainWindow extends JFrame {
             }
             Actions.onMove(MoveDirection.RIGHT);
         });
-        sectorRight.setLocation(532 + 75, 450 + 10);
+        sectorRight.setLocation(800 + 75, 450 + 10);
         sectorRight.setVisible(true);
         add(sectorRight);
 
@@ -369,7 +331,7 @@ public class MainWindow extends JFrame {
             // Move sector up.
             Actions.onMove(MoveDirection.UP);
         });
-        sectorUp.setLocation(532 + 35, 415 + 10);
+        sectorUp.setLocation(800 + 35, 415 + 10);
         sectorUp.setVisible(true);
         add(sectorUp);
 
@@ -386,139 +348,19 @@ public class MainWindow extends JFrame {
             // Move sector down.
             Actions.onMove(MoveDirection.DOWN);
         });
-        sectorDown.setLocation(532 + 35, 485 + 10);
+        sectorDown.setLocation(800 + 35, 485 + 10);
         sectorDown.setVisible(true);
         add(sectorDown);
 
-        /*****************************************/
-
-        /**
-         * All below is the Labels for the Tile info.
-         */
-        size += 245;
-        tile = new JLabel();
-        tile.setLocation(532, size);
-        tile.setForeground(Color.BLACK);
-        tile.setSize(200, 16);
-
-        tile.setVisible(true);
-        size += 22;
-
-        add(tile);
-
-        elevation = new JLabel();
-        elevation.setLocation(532, size);
-        elevation.setForeground(Color.BLACK);
-        elevation.setSize(200, 16);
-
-        elevation.setVisible(true);
-        size += 16;
-        roofTexture = new JLabel();
-        roofTexture.setLocation(532, size);
-        roofTexture.setForeground(Color.BLACK);
-        roofTexture.setSize(200, 16);
-
-        roofTexture.setVisible(true);
-        size += 16;
-        overlay = new JLabel();
-        overlay.setLocation(532, size);
-        overlay.setForeground(Color.BLACK);
-        overlay.setSize(200, 16);
-
-        overlay.setVisible(true);
-        size += 16;
-        horizontalWall = new JLabel();
-        horizontalWall.setLocation(532, size);
-        horizontalWall.setForeground(Color.BLACK);
-        horizontalWall.setSize(200, 16);
-
-        horizontalWall.setVisible(true);
-        size += 16;
-
-        verticalWall = new JLabel();
-        verticalWall.setLocation(532, size);
-        verticalWall.setForeground(Color.BLACK);
-        verticalWall.setSize(200, 16);
-
-        verticalWall.setVisible(true);
-        size += 16;
-
-        diagonalWall = new JLabel();
-        diagonalWall.setLocation(532, size);
-        diagonalWall.setForeground(Color.BLACK);
-        diagonalWall.setSize(200, 16);
-
-        diagonalWall.setVisible(true);
-        size += 16;
-
-        groundtexture = new JLabel();
-        groundtexture.setLocation(532, size);
-        groundtexture.setForeground(Color.BLACK);
-        groundtexture.setSize(200, 16);
-
-        groundtexture.setVisible(true);
-        size += 16;
-
-        add(groundtexture);
-        add(diagonalWall);
-        add(verticalWall);
-        add(horizontalWall);
-        add(overlay);
-        add(roofTexture);
-        add(elevation);
-
-        /**
-         * TODO another mark, nvm this.
-         */
-
-        brushes = new JComboBox(Util.BRUSH_LIST);
-        brushes.setLocation(536, 235 + 20 - 250);
+        brushes = new JComboBox<>(BrushOption.values());
+        brushes.setSelectedItem(BrushOption.NONE);
+        brushes.setLocation(800, 10);
         brushes.setSize(320, 20);
         brushes.addActionListener(evt -> {
-            if (brushes.getSelectedItem().equals("Configure your own")) {
-                diagonalWallJS.setVisible(true);
-                verticalWallJS.setVisible(true);
-                horizontalWallJS.setVisible(true);
-                overlayJS.setVisible(true);
-                roofTextureJS.setVisible(true);
-                elevationJS.setVisible(true);
-                diagonalWallLabel.setVisible(true);
-                verticalWallLabel.setVisible(true);
-                horizontalWallLabel.setVisible(true);
-                overlayLabel.setVisible(true);
-                roofTextureLabel.setVisible(true);
-                elevationLabel.setVisible(true);
-                loadData.setVisible(true);
-            } else {
-                diagonalWallJS.setVisible(false);
-                verticalWallJS.setVisible(false);
-                horizontalWallJS.setVisible(false);
-                overlayJS.setVisible(false);
-                roofTextureJS.setVisible(false);
-                elevationJS.setVisible(false);
-                diagonalWallLabel.setVisible(false);
-                verticalWallLabel.setVisible(false);
-                horizontalWallLabel.setVisible(false);
-                overlayLabel.setVisible(false);
-                roofTextureLabel.setVisible(false);
-                elevationLabel.setVisible(false);
-                loadData.setVisible(false);
-            }
-            if (brushes.getSelectedItem().equals("Elevation")) {
-                int ele = Integer.parseInt(
-                        JOptionPane.showInputDialog("Enter new Elevation Value")
-                );
-                if ((ele >= 0 && ele <= 255)) {
-                    Util.eleReady = true;
-                    Util.newEle = (byte) ele;
-                } else {
-                    JOptionPane.showMessageDialog(this, "That was not a correct value \nMust enter between 0-255\nIf you are unsure"
-                            + " on what elevation you need\nClick another tile,"
-                            + " then click Advanced>Toggle Tile Info\nand you will see other tile's Elevation(height) values");
-                }
-            } else {
-                Util.eleReady = false;
-            }
+            BrushOption option = (BrushOption) brushes.getSelectedItem();
+            eventBus.post(new TerrainTemplateUpdateEvent(
+                    Objects.requireNonNull(option).getTemplate()
+            ));
         });
 
         add(brushes);
@@ -544,7 +386,7 @@ public class MainWindow extends JFrame {
     public static JLabel groundtexture;
     public static JLabel horizontalWall;
     public static JLabel verticalWall;
-    public static JComboBox brushes;
+    public static JComboBox<BrushOption> brushes;
 
     public static JSlider textureJS;
     public static JSlider diagonalWallJS;

@@ -1,4 +1,4 @@
-package org.openrsc.editor;
+package org.openrsc.editor.gui.graphics;
 
 public enum LineLocation {
     BORDER_TOP,
