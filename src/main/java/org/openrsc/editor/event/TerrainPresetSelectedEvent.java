@@ -6,6 +6,6 @@ import org.openrsc.editor.model.brush.TerrainTemplate;
 
 @AllArgsConstructor
 @Getter
-public class TerrainTemplateUpdateEvent {
-    private final TerrainTemplate template;
+public class TerrainPresetSelectedEvent {
+    TerrainTemplate template;
 }

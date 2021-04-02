@@ -1,28 +1,39 @@
 package org.openrsc.editor.gui.controls;
 
+import com.google.common.eventbus.EventBus;
 import org.openrsc.editor.Util;
-import org.openrsc.editor.model.TerrainProperty;
+import org.openrsc.editor.event.EventBusFactory;
+import org.openrsc.editor.event.TerrainPresetSelectedEvent;
+import org.openrsc.editor.model.brush.BrushOption;
+import org.openrsc.editor.model.brush.TerrainProperty;
 
 import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import java.awt.Dimension;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class TileControlPanel extends JPanel {
+    private static final EventBus eventBus = EventBusFactory.getEventBus();
+
     public TileControlPanel(int x, int y) {
         super();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setLocation(x, y);
-        setSize(400, 500);
+        setSize(400, 400);
         setVisible(true);
+
+        JPanel presetsPanel = getPresetsPanel();
+        add(presetsPanel);
 
         addLabeledSlider(
                 "Stamp Size (" + Util.stampSize + ")",
                 Util.stampSize,
-                0,
+                1,
                 7,
                 1,
                 true,
@@ -34,6 +45,26 @@ public class TileControlPanel extends JPanel {
 
         Arrays.stream(TerrainProperty.values())
                 .forEach(terrainProperty -> add(new TerrainPropertySlider(terrainProperty)));
+    }
+
+    private JPanel getPresetsPanel() {
+        JPanel presetsPanel = new JPanel();
+        presetsPanel.setLayout(new BoxLayout(presetsPanel, BoxLayout.X_AXIS));
+
+        JLabel loadPresetLabel = new JLabel("Load Preset");
+        loadPresetLabel.setPreferredSize(new Dimension(150, 15));
+        presetsPanel.add(loadPresetLabel);
+
+        JComboBox<BrushOption> brushes = new JComboBox<>(BrushOption.values());
+        brushes.setSelectedItem(BrushOption.NONE);
+        brushes.addActionListener(evt -> {
+            BrushOption option = (BrushOption) brushes.getSelectedItem();
+            eventBus.post(new TerrainPresetSelectedEvent(
+                    Objects.requireNonNull(option).getTemplate()
+            ));
+        });
+        presetsPanel.add(brushes);
+        return presetsPanel;
     }
 
     public void addLabeledSlider(
@@ -49,7 +80,7 @@ public class TileControlPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         JLabel label = new JLabel();
-        label.setPreferredSize(new Dimension(100, 15));
+        label.setPreferredSize(new Dimension(150, 15));
         label.setText(initialText);
         label.setVisible(true);
         panel.add(label);

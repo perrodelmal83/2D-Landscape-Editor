@@ -4,6 +4,7 @@ import org.openrsc.editor.data.GameObjectLoc;
 import org.openrsc.editor.data.ItemLoc;
 import org.openrsc.editor.data.NpcLoc;
 import org.openrsc.editor.gui.graphics.EditorCanvas;
+import org.openrsc.editor.model.Tile;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;
@@ -20,6 +21,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -113,8 +115,8 @@ public class Util {
         }
         return x >= 0
                 && y >= 0
-                && x < EditorCanvas.NUM_TILES + EditorCanvas.TILE_SIZE
-                && y < EditorCanvas.NUM_TILES;
+                && x < EditorCanvas.GRID_PIXEL_SIZE + EditorCanvas.TILE_SIZE
+                && y < EditorCanvas.GRID_PIXEL_SIZE;
     }
 
     /**
@@ -493,25 +495,25 @@ public class Util {
         getHorizontalWallColor.put((byte) 57, WALL_OUTLINE_COLOR);
 
         /* Type of wall is a / */
-        getDiagonalWallColorS.put(1, Color.WHITE);
-        getDiagonalWallColorS.put(14, Color.WHITE);
-        getDiagonalWallColorS.put(3, Color.WHITE);
+        forwardSlashDiagWallColorsMap.put(1, Color.WHITE);
+        forwardSlashDiagWallColorsMap.put(14, Color.WHITE);
+        forwardSlashDiagWallColorsMap.put(3, Color.WHITE);
 
-        getDiagonalWallColorS.put(19, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorS.put(17, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorS.put(5, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorS.put(4, WALL_OUTLINE_COLOR);
+        forwardSlashDiagWallColorsMap.put(19, WALL_OUTLINE_COLOR);
+        forwardSlashDiagWallColorsMap.put(17, WALL_OUTLINE_COLOR);
+        forwardSlashDiagWallColorsMap.put(5, WALL_OUTLINE_COLOR);
+        forwardSlashDiagWallColorsMap.put(4, WALL_OUTLINE_COLOR);
 
         /* Type of wall is a \ */
-        getDiagonalWallColorW.put(12001, Color.WHITE);
-        getDiagonalWallColorW.put(12014, Color.WHITE);
+        backSlashDiagWallColorsMap.put(12001, Color.WHITE);
+        backSlashDiagWallColorsMap.put(12014, Color.WHITE);
 
-        getDiagonalWallColorW.put(225, Color.WHITE);
+        backSlashDiagWallColorsMap.put(225, Color.WHITE);
 
-        getDiagonalWallColorW.put(226, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorW.put(228, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorW.put(229, WALL_OUTLINE_COLOR);
-        getDiagonalWallColorW.put(243, WALL_OUTLINE_COLOR);
+        backSlashDiagWallColorsMap.put(226, WALL_OUTLINE_COLOR);
+        backSlashDiagWallColorsMap.put(228, WALL_OUTLINE_COLOR);
+        backSlashDiagWallColorsMap.put(229, WALL_OUTLINE_COLOR);
+        backSlashDiagWallColorsMap.put(243, WALL_OUTLINE_COLOR);
 
     }
 
@@ -521,16 +523,10 @@ public class Util {
      * underground/upstairs/second story.
      */
     public static Point getRSCCoords(Tile t) {
-        return new Point((t.getLane() + (Util.sectorX - 48) * 48),
-                ((((Util.sectorY - 36) * 48) + t.getPosition() + 96) - 144) + (Util.sectorH * 944));
-    }
-
-    public static void toggleShowNpcs() {
-        showNpcs = !showNpcs;
-    }
-
-    public static void toggleShowRoofs() {
-        showRoofs = !showRoofs;
+        return new Point(
+                (t.getGridX() + (Util.sectorX - 48) * 48),
+                ((((Util.sectorY - 36) * 48) + t.getGridY() + 96) - 144) + (Util.sectorH * 944)
+        );
     }
 
     /**
@@ -540,36 +536,27 @@ public class Util {
         NOT_LOADED, LOADED, RENDER_READY, CHANGING_SECTOR, TILE_NEEDS_UPDATING, FORCE_FULL_RENDER
     }
 
-    public static HashMap<Integer, String> objectNames = new HashMap<>();
-    public static HashMap<Integer, String> npcNames = new HashMap<>();
-    public static HashMap<Integer, String> itemNames = new HashMap<>();
-    public static HashMap<Point, ItemLoc> itemLocationMap = new HashMap<>();
-    public static HashMap<Point, NpcLoc> npcLocationMap = new HashMap<>();
-    public static HashMap<Point, GameObjectLoc> gameObjectLocationMap = new HashMap<>();
-    public static HashMap<Integer, Color> getDiagonalWallColorW = new HashMap<>();
-    public static HashMap<Integer, Color> getDiagonalWallColorS = new HashMap<>();
-    public static HashMap<Byte, Color> getHorizontalWallColor = new HashMap<>();
-    public static HashMap<Byte, Color> getVerticalWallColor = new HashMap<>();
-    public static HashMap<Byte, Color> getOverlay = new HashMap<>();
+    public static Map<Integer, String> objectNames = new HashMap<>();
+    public static Map<Integer, String> npcNames = new HashMap<>();
+    public static Map<Integer, String> itemNames = new HashMap<>();
+    public static Map<Point, ItemLoc> itemLocationMap = new HashMap<>();
+    public static Map<Point, NpcLoc> npcLocationMap = new HashMap<>();
+    public static Map<Point, GameObjectLoc> gameObjectLocationMap = new HashMap<>();
+    public static Map<Integer, Color> backSlashDiagWallColorsMap = new HashMap<>();
+    public static Map<Integer, Color> forwardSlashDiagWallColorsMap = new HashMap<>();
+    public static Map<Byte, Color> getHorizontalWallColor = new HashMap<>();
+    public static Map<Byte, Color> getVerticalWallColor = new HashMap<>();
+    public static Map<Byte, Color> getOverlay = new HashMap<>();
 
     public static State STATE = State.NOT_LOADED;
-    public static boolean toggleInfo = true;
     private static long lastMilli = 0;
-    public static Tile oldSelectedTile = null;
-    public static boolean eleReady = false;
-    public static byte newEle = -1;
     public static int sectorX = 51;
     public static int sectorY = 50;
-    public static Tile selectedTile = null;
-    public static Tile copiedTile = null;
     public static int sectorH = 0;
-    public static final int FPS = 1;
     public static boolean sectorModified = false;
     public static final int THREAD_DELAY = 8;
 
     public static ByteBuffer buffer;
-    public static boolean showRoofs = false;
-    public static boolean showNpcs = true;
     public static ZipFile tileArchive;
     public static File currentFile = null;
     public static boolean MAP_BRIGHTNESS_LIGHT = false;

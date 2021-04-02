@@ -26,15 +26,15 @@ public class EditorMenuBar extends JMenuBar {
         );
 
         this.add(
-                new AdvancedMenu(
+                new ViewMenu(
                         Actions::onShowUnderground,
                         Actions::onShowGroundLevel,
                         Actions::onShowUpstairs,
                         Actions::onShowSecondStory,
-                        Actions::onJumpToCoords,
-                        Actions::toggleShowRoofs,
-                        Actions::toggleShowNpcs
+                        Actions::onJumpToCoords
                 )
         );
+
+        add(new SelectionMenu());
     }
 }

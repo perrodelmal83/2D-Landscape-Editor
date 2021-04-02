@@ -1,0 +1,15 @@
+package org.openrsc.editor.model;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Singular;
+
+import java.awt.Point;
+import java.util.List;
+
+@Builder
+@Getter
+public class SelectRegion {
+    @Singular
+    private final List<Point> points;
+}

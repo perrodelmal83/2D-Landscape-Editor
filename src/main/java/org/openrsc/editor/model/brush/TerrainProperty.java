@@ -1,4 +1,4 @@
-package org.openrsc.editor.model;
+package org.openrsc.editor.model.brush;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

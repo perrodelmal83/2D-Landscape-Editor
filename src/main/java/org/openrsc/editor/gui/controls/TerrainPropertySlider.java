@@ -3,9 +3,10 @@ package org.openrsc.editor.gui.controls;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import org.openrsc.editor.event.EventBusFactory;
+import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
-import org.openrsc.editor.model.TerrainProperty;
-import org.openrsc.editor.model.TerrainTemplate;
+import org.openrsc.editor.model.brush.TerrainProperty;
+import org.openrsc.editor.model.brush.TerrainTemplate;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -42,14 +43,19 @@ public class TerrainPropertySlider extends JPanel {
         slider.setPaintTicks(true);
         slider.setMinimum(0);
         slider.addChangeListener(evt -> {
-            TerrainTemplate.TerrainTemplateBuilder builder =
-                    this.currentTemplate != null ? this.currentTemplate.toBuilder() : TerrainTemplate.builder();
-            eventBus.post(
-                    builder
-                            .value(this.terrainProperty, slider.getValue())
-                            .build()
-            );
-            label.setText(getPropertyLabel(slider.getValue()));
+            // Check that this event is a result of user sliding the item
+            if (evt.getSource() == slider) {
+                TerrainTemplate.TerrainTemplateBuilder builder =
+                        this.currentTemplate != null ? this.currentTemplate.toBuilder() : TerrainTemplate.builder();
+                eventBus.post(
+                        new TerrainTemplateUpdateEvent(
+                                builder
+                                        .value(this.terrainProperty, slider.getValue())
+                                        .build()
+                        )
+                );
+                label.setText(getPropertyLabel(slider.getValue()));
+            }
         });
         add(slider);
     }
@@ -59,7 +65,7 @@ public class TerrainPropertySlider extends JPanel {
     }
 
     @Subscribe
-    public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
+    public void onTerrainPresetSelected(TerrainPresetSelectedEvent event) {
         TerrainTemplate template = event.getTemplate();
         Integer value = template.getValues().get(this.terrainProperty);
         label.setText(getPropertyLabel(value));
