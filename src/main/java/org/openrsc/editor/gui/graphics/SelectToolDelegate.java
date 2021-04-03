@@ -1,8 +1,11 @@
 package org.openrsc.editor.gui.graphics;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
-import org.openrsc.editor.event.SelectRegionUpdateEvent;
+import org.openrsc.editor.event.action.ConvertPathToSelectionAction;
+import org.openrsc.editor.event.selection.SelectRegionUpdateEvent;
 import org.openrsc.editor.gui.graphics.stroke.DashedStrokeGenerator;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.SelectRegion;
@@ -75,6 +78,8 @@ public class SelectToolDelegate extends ToolDelegate {
                             .point(lowerR)
                             .point(lowerL)
                             .point(upperL)
+                            // Complete the polygon by drawing back to the origin
+                            .point(upperR)
                             .build()
             );
         }
@@ -95,9 +100,11 @@ public class SelectToolDelegate extends ToolDelegate {
             int[] allX = new int[nPoints];
             int[] allY = new int[nPoints];
             for (int i = 0; i < nPoints; i++) {
-                Point pixelPoint = editorCanvas.gridPointToPixelPoint(points.get(i));
+                Point point = points.get(i);
+                Point pixelPoint = editorCanvas.gridPointToPixelPoint(point);
                 allX[i] = pixelPoint.x;
                 allY[i] = pixelPoint.y;
+                editorCanvas.drawTileBorder(editorCanvas.getTileByGridCoords(point.x, point.y));
             }
 
             Polygon polygon = new Polygon(allX, allY, nPoints);
@@ -125,5 +132,11 @@ public class SelectToolDelegate extends ToolDelegate {
                         .selectionPresent(selectRegion != null)
                         .build()
         );
+    }
+
+    @Subscribe
+    public void onConvertPathToSelection(ConvertPathToSelectionAction action) {
+        eventBus.post(new EditorToolSelectedEvent(EditorTool.SELECT));
+        setSelectRegion(SelectRegion.builder().points(action.getPoints()).build());
     }
 }

@@ -7,6 +7,6 @@ import org.openrsc.editor.model.SelectPath;
 @Builder
 @Getter
 public class SelectPathUpdateEvent {
-    private SelectPath selectPath;
-    private boolean isPresent;
+    private final SelectPath selectPath;
+    private final boolean isPresent;
 }

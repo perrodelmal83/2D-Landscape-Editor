@@ -36,5 +36,6 @@ public class EditorMenuBar extends JMenuBar {
         );
 
         add(new SelectionMenu());
+        add(new PathMenu());
     }
 }

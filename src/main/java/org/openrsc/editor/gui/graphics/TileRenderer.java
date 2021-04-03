@@ -8,6 +8,9 @@ import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.model.DisplayConfiguration;
 import org.openrsc.editor.model.DisplayConfigurationProperty;
 import org.openrsc.editor.model.Tile;
+import org.openrsc.editor.model.definition.ColorConstants;
+import org.openrsc.editor.model.definition.OverlayDefinition;
+import org.openrsc.editor.model.definition.WallDefinition;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -47,25 +50,43 @@ public class TileRenderer {
         }
 
         // paints Tile ground data (Paths/roads etc, things on top of the original data)
-        if (Util.getOverlay.containsKey(tile.getGroundOverlay())) {
-            g.setColor(Util.getOverlay.get(tile.getGroundOverlay()));
+        OverlayDefinition overlayDef = OverlayDefinition.OVERLAYS.get(tile.getGroundOverlayInt());
+        if (overlayDef != null) {
+            g.setColor(OverlayDefinition.OVERLAYS.get(tile.getGroundOverlayInt()).getColor());
             g.fill(tile.getShape());
             g.draw(tile.getShape());
+
+            // Draw X to let user know this terrain is not passible
+            if (!overlayDef.isPassable()) {
+                EditorCanvas.drawLine(
+                        tile,
+                        LineLocation.DIAGONAL_FROM_TOP_RIGHT,
+                        ColorConstants.IMPASSIBLE_TERRAIN_OUTLINE);
+                EditorCanvas.drawLine(
+                        tile,
+                        LineLocation.DIAGONAL_FROM_TOP_LEFT,
+                        ColorConstants.IMPASSIBLE_TERRAIN_OUTLINE
+                );
+            }
         }
         // paints Tile wall color (Vertical) + the line to show a wall is there.
-        if (Util.getVerticalWallColor.containsKey(tile.getTopBorderWall())) {
-            EditorCanvas.drawLine(tile, LineLocation.BORDER_TOP, Util.WALL_OUTLINE_COLOR);
+        if (WallDefinition.NORMAL.containsKey(tile.getTopBorderWallInt())) {
+            EditorCanvas.drawLine(
+                    tile,
+                    LineLocation.BORDER_TOP,
+                    ColorConstants.WALL_OUTLINE_COLOR
+            );
         }
         // paints Tile wall color (Horizontal) + line to show a wall is there.
-        if (Util.getHorizontalWallColor.containsKey(tile.getRightBorderWall())) {
-            EditorCanvas.drawLine(tile, LineLocation.BORDER_RIGHT, Util.WALL_OUTLINE_COLOR);
+        if (WallDefinition.NORMAL.containsKey(tile.getRightBorderWallInt())) {
+            EditorCanvas.drawLine(tile, LineLocation.BORDER_RIGHT, ColorConstants.WALL_OUTLINE_COLOR);
         }
         // paints Diagonal walls.
-        if (Util.forwardSlashDiagWallColorsMap.containsKey(tile.getDiagonalWallsInt())) {
-            EditorCanvas.drawLine(tile, LineLocation.DIAGONAL_FROM_TOP_RIGHT, Util.WALL_OUTLINE_COLOR);
+        if (WallDefinition.NORMAL.containsKey(tile.getDiagonalWalls())) {
+            EditorCanvas.drawLine(tile, LineLocation.DIAGONAL_FROM_TOP_RIGHT, ColorConstants.WALL_OUTLINE_COLOR);
         }
-        if (Util.backSlashDiagWallColorsMap.containsKey(tile.getDiagonalWallsInt())) {
-            EditorCanvas.drawLine(tile, LineLocation.DIAGONAL_FROM_TOP_LEFT, Util.WALL_OUTLINE_COLOR);
+        if (WallDefinition.DIAGONAL_BACKWARDS.containsKey(tile.getDiagonalWalls())) {
+            EditorCanvas.drawLine(tile, LineLocation.DIAGONAL_FROM_TOP_LEFT, ColorConstants.WALL_OUTLINE_COLOR);
         }
 
         renderPeripherals(tile, g);

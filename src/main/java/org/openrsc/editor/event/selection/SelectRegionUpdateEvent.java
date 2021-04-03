@@ -1,4 +1,4 @@
-package org.openrsc.editor.event;
+package org.openrsc.editor.event.selection;
 
 import lombok.Builder;
 import lombok.Getter;

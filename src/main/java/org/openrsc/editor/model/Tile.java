@@ -3,9 +3,9 @@ package org.openrsc.editor.model;
 import lombok.Getter;
 import lombok.Setter;
 import org.openrsc.editor.Util;
-import org.openrsc.editor.data.GameObjectLoc;
-import org.openrsc.editor.data.ItemLoc;
-import org.openrsc.editor.data.NpcLoc;
+import org.openrsc.editor.model.data.GameObjectLoc;
+import org.openrsc.editor.model.data.ItemLoc;
+import org.openrsc.editor.model.data.NpcLoc;
 
 import java.awt.Point;
 import java.awt.Shape;
@@ -38,6 +38,9 @@ public class Tile {
     private byte topBorderWall = -1;
     private int diagonalWalls = -1;
 
+    public int getGroundElevationInt() {
+        return groundElevation & 0xff;
+    }
 
     public int getGroundTextureInt() {
         return groundTexture & 0xff;
@@ -89,7 +92,7 @@ public class Tile {
     /**
      * @return the horizontalWall
      */
-    public int getHorizontalWallInt() {
+    public int getRightBorderWallInt() {
         return rightBorderWall & 0xff;
     }
 
@@ -110,7 +113,7 @@ public class Tile {
     /**
      * @return the verticalWall int
      */
-    public int getVerticalWallInt() {
+    public int getTopBorderWallInt() {
         return topBorderWall & 0xff;
     }
 
@@ -127,13 +130,6 @@ public class Tile {
      */
     public int getDiagonalWalls() {
         return diagonalWalls;
-    }
-
-    /**
-     * @return the diagonalWalls
-     */
-    public int getDiagonalWallsInt() {
-        return diagonalWalls & 0xff;
     }
 
     /**

@@ -1,10 +1,9 @@
-package org.openrsc.editor.model.brush;
+package org.openrsc.editor.model.template;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
-import org.openrsc.editor.model.Template;
 
 import java.util.Map;
 

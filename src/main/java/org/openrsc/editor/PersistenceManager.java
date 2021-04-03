@@ -1,9 +1,9 @@
 package org.openrsc.editor;
 
 import com.thoughtworks.xstream.XStream;
-import org.openrsc.editor.data.GameObjectLoc;
-import org.openrsc.editor.data.ItemLoc;
-import org.openrsc.editor.data.NpcLoc;
+import org.openrsc.editor.model.data.GameObjectLoc;
+import org.openrsc.editor.model.data.ItemLoc;
+import org.openrsc.editor.model.data.NpcLoc;
 
 import java.io.File;
 import java.io.FileOutputStream;

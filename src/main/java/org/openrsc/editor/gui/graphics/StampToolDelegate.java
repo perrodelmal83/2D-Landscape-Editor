@@ -2,13 +2,14 @@ package org.openrsc.editor.gui.graphics;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import org.openrsc.editor.TemplateUtil;
 import org.openrsc.editor.Util;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.Tile;
-import org.openrsc.editor.model.brush.TerrainTemplate;
+import org.openrsc.editor.model.template.TerrainTemplate;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -30,36 +31,6 @@ public class StampToolDelegate extends ToolDelegate {
         super(EditorTool.STAMP);
         this.editorCanvas = editorCanvas;
         eventBus.register(this);
-    }
-
-    private void applyBrush(Tile tile) {
-        if (tile != null && currentTemplate != null) {
-            currentTemplate.getValues().forEach((property, value) -> {
-                switch (property) {
-                    case GROUND_TEXTURE:
-                        tile.setGroundTexture(value.byteValue());
-                        break;
-                    case GROUND_OVERLAY:
-                        tile.setGroundOverlay(value.byteValue());
-                        break;
-                    case WALL_DIAGONAL:
-                        tile.setDiagonalWalls(value);
-                        break;
-                    case WALL_EAST:
-                        tile.setEastWall(value.byteValue());
-                        break;
-                    case WALL_NORTH:
-                        tile.setNorthWall(value.byteValue());
-                        break;
-                    case GROUND_ELEVATION:
-                        tile.setGroundElevation(value.byteValue());
-                        break;
-                    case ROOF_TEXTURE:
-                        tile.setRoofTexture(value.byteValue());
-                        break;
-                }
-            });
-        }
     }
 
     private void calcStampCursor(Point cursorCoords, int stampSize) {
@@ -101,7 +72,7 @@ public class StampToolDelegate extends ToolDelegate {
     @Override
     public void mouseClicked(MouseEvent evt) {
         calcStampCursor(evt.getPoint(), Util.stampSize);
-        hoverTiles.forEach(this::applyBrush);
+        hoverTiles.forEach(editorCanvas::applyBrush);
     }
 
     @Override
@@ -127,7 +98,7 @@ public class StampToolDelegate extends ToolDelegate {
     @Override
     public void mouseDragged(MouseEvent evt) {
         calcStampCursor(evt.getPoint(), Util.stampSize);
-        hoverTiles.forEach(this::applyBrush);
+        hoverTiles.forEach(editorCanvas::applyBrush);
     }
 
     @Override
@@ -137,7 +108,7 @@ public class StampToolDelegate extends ToolDelegate {
 
     @Subscribe
     public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
-        this.currentTemplate = event.getTemplate();
+        this.currentTemplate = TemplateUtil.merge(currentTemplate, event);
     }
 
     @Subscribe

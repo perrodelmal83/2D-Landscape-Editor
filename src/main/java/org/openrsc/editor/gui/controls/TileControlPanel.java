@@ -5,7 +5,7 @@ import org.openrsc.editor.Util;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.model.brush.BrushOption;
-import org.openrsc.editor.model.brush.TerrainProperty;
+import org.openrsc.editor.model.template.TerrainProperty;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;

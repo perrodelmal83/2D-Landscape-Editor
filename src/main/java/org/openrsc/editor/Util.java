@@ -1,10 +1,10 @@
 package org.openrsc.editor;
 
-import org.openrsc.editor.data.GameObjectLoc;
-import org.openrsc.editor.data.ItemLoc;
-import org.openrsc.editor.data.NpcLoc;
 import org.openrsc.editor.gui.graphics.EditorCanvas;
 import org.openrsc.editor.model.Tile;
+import org.openrsc.editor.model.data.GameObjectLoc;
+import org.openrsc.editor.model.data.ItemLoc;
+import org.openrsc.editor.model.data.NpcLoc;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;
@@ -29,7 +29,6 @@ import java.util.zip.ZipOutputStream;
 
 public class Util {
 
-    public static final Color WALL_OUTLINE_COLOR = new Color(96, 96, 96);
     public static int stampSize = 5;
     private static int fpsCount;
 
@@ -60,7 +59,7 @@ public class Util {
 
     public static Point mouseCoordsToGridCoords(Point point) {
         return new Point(
-                EditorCanvas.GRID_SIZE - point.x / EditorCanvas.TILE_SIZE,
+                EditorCanvas.GRID_SIZE - point.x / EditorCanvas.TILE_SIZE - 1,
                 point.y / EditorCanvas.TILE_SIZE
         );
     }
@@ -399,123 +398,8 @@ public class Util {
     }
 
     /**
-     * Updates the Text on the GUI to set the new tile values
-     *
-     * @param tile - the Tile to update.
-     */
-    public static void updateText(Tile tile) {
-//        Point rscTile = tile.getRSCCoords();
-//
-//        if (!toggleInfo) {
-//            // show rsc data
-//            MainWindow.tile.setText("RSC Coords: " + rscTile.x + ", " + rscTile.y);
-//
-//            if (tile.getTileObject() != null) {
-//                MainWindow.elevation.setText("ObjectID: " + tile.getTileObject().getId());
-//                MainWindow.roofTexture.setText("Object Name: " + tile.getTileObject().getName());
-//            } else {
-//                MainWindow.elevation.setText("");
-//                MainWindow.roofTexture.setText("");
-//            }
-//            if (tile.getTileNpc() != null) {
-//                MainWindow.overlay.setText("NpcID: " + tile.getTileNpc().getId());
-//                MainWindow.horizontalWall.setText("Npc Name: " + tile.getTileNpc().getName());
-//            } else {
-//                MainWindow.overlay.setText("");
-//                MainWindow.horizontalWall.setText("");
-//            }
-//            if (tile.getTileItem() != null) {
-//                MainWindow.verticalWall.setText("ItemID: " + tile.getTileItem().getId());
-//                MainWindow.diagonalWall.setText("Item Name: " + tile.getTileItem().getName());
-//            } else {
-//                MainWindow.verticalWall.setText("");
-//                MainWindow.diagonalWall.setText("");
-//            }
-//        } else {
-//            // show advanced tile data
-//            MainWindow.tile.setText("Selected tile info: " + "\nID: " + tile.getID());
-//            MainWindow.elevation.setText("Ground Elevation: " + tile.getGroundElevationInt());
-//            MainWindow.overlay.setText("Ground Overlay: " + tile.getGroundOverlayInt());
-//            MainWindow.roofTexture.setText("Roof Texture: " + tile.getRoofTexture());
-//            MainWindow.groundtexture.setText("GroundTexture: " + tile.getGroundTextureInt());
-//            MainWindow.diagonalWall.setText("Diagonal Wall: " + tile.getDiagonalWallsInt());
-//            MainWindow.verticalWall.setText("Vertical Wall: " + tile.getVerticalWallInt());
-//            MainWindow.horizontalWall.setText("Horizontal Wall: " + tile.getHorizontalWallInt());
-//        }
-    }
-
-    /**
      * Sets the HashMaps with the correct values.
      */
-    public static void initData() {
-        /* River/Water */
-        getOverlay.put((byte) 2, new Color(32, 64, 126));
-        /* Texture for the brown Floors */
-        getOverlay.put((byte) 3, new Color(100, 48, 2));
-        /* Texture brown floor, for bridge crossings */
-        getOverlay.put((byte) 4, new Color(100, 48, 2));
-        /* Paths for Roads */
-        getOverlay.put((byte) 1, Color.DARK_GRAY);
-        /* Bank underlays */
-        getOverlay.put((byte) 5, new Color(64, 64, 64));
-        /* Black tile */
-        getOverlay.put((byte) 16, Color.BLACK);
-        getOverlay.put((byte) 8, Color.BLACK);
-        /* Maroon tile */
-        getOverlay.put((byte) 6, new Color(119, 0, 17));
-        /* Al kharid mining spot tiles around the edge */
-        getOverlay.put((byte) 9, Color.WHITE);
-
-        /* Brown Fence vertical */
-        getVerticalWallColor.put((byte) 5, new Color(139, 69, EditorCanvas.TILE_SIZE));
-        /* White walls, unknown */
-        getVerticalWallColor.put((byte) 1, Color.WHITE);
-        getVerticalWallColor.put((byte) 15, Color.WHITE);
-        getVerticalWallColor.put((byte) 7, Color.WHITE);
-        getVerticalWallColor.put((byte) 14, Color.WHITE);
-
-        getVerticalWallColor.put((byte) 57, new Color(96, 96, 96));
-        /* Dray bank wall with window */
-        getVerticalWallColor.put((byte) 16, Color.WHITE);
-        /* Dray houses above it, must be a window type of wall */
-        getVerticalWallColor.put((byte) 4, Color.WHITE);
-
-        /* Brown fence Horizontal */
-        getHorizontalWallColor.put((byte) 5, new Color(139, 69, EditorCanvas.TILE_SIZE));
-        /* White walls, unknown */
-        getHorizontalWallColor.put((byte) 1, Color.WHITE);
-        /* This one is a stony wall with windows */
-        getHorizontalWallColor.put((byte) 4, Color.WHITE);
-        getHorizontalWallColor.put((byte) 14, Color.WHITE);
-
-        getHorizontalWallColor.put((byte) 16, Color.WHITE);
-        getHorizontalWallColor.put((byte) 7, Color.WHITE);
-        getHorizontalWallColor.put((byte) 15, Color.WHITE);
-        /* Wooden looking Wall */
-        getHorizontalWallColor.put((byte) 57, WALL_OUTLINE_COLOR);
-
-        /* Type of wall is a / */
-        forwardSlashDiagWallColorsMap.put(1, Color.WHITE);
-        forwardSlashDiagWallColorsMap.put(14, Color.WHITE);
-        forwardSlashDiagWallColorsMap.put(3, Color.WHITE);
-
-        forwardSlashDiagWallColorsMap.put(19, WALL_OUTLINE_COLOR);
-        forwardSlashDiagWallColorsMap.put(17, WALL_OUTLINE_COLOR);
-        forwardSlashDiagWallColorsMap.put(5, WALL_OUTLINE_COLOR);
-        forwardSlashDiagWallColorsMap.put(4, WALL_OUTLINE_COLOR);
-
-        /* Type of wall is a \ */
-        backSlashDiagWallColorsMap.put(12001, Color.WHITE);
-        backSlashDiagWallColorsMap.put(12014, Color.WHITE);
-
-        backSlashDiagWallColorsMap.put(225, Color.WHITE);
-
-        backSlashDiagWallColorsMap.put(226, WALL_OUTLINE_COLOR);
-        backSlashDiagWallColorsMap.put(228, WALL_OUTLINE_COLOR);
-        backSlashDiagWallColorsMap.put(229, WALL_OUTLINE_COLOR);
-        backSlashDiagWallColorsMap.put(243, WALL_OUTLINE_COLOR);
-
-    }
 
     /**
      * @param t - the given Tile
@@ -542,11 +426,6 @@ public class Util {
     public static Map<Point, ItemLoc> itemLocationMap = new HashMap<>();
     public static Map<Point, NpcLoc> npcLocationMap = new HashMap<>();
     public static Map<Point, GameObjectLoc> gameObjectLocationMap = new HashMap<>();
-    public static Map<Integer, Color> backSlashDiagWallColorsMap = new HashMap<>();
-    public static Map<Integer, Color> forwardSlashDiagWallColorsMap = new HashMap<>();
-    public static Map<Byte, Color> getHorizontalWallColor = new HashMap<>();
-    public static Map<Byte, Color> getVerticalWallColor = new HashMap<>();
-    public static Map<Byte, Color> getOverlay = new HashMap<>();
 
     public static State STATE = State.NOT_LOADED;
     private static long lastMilli = 0;

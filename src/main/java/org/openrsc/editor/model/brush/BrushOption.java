@@ -2,6 +2,8 @@ package org.openrsc.editor.model.brush;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.openrsc.editor.model.template.TerrainProperty;
+import org.openrsc.editor.model.template.TerrainTemplate;
 
 import java.util.Arrays;
 import java.util.Collections;

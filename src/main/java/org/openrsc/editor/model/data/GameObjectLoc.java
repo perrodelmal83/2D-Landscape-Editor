@@ -1,4 +1,4 @@
-package org.openrsc.editor.data;
+package org.openrsc.editor.model.data;
 
 import org.openrsc.editor.Util;
 

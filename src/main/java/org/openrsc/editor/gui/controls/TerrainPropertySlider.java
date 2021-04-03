@@ -2,11 +2,12 @@ package org.openrsc.editor.gui.controls;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import org.openrsc.editor.TemplateUtil;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
-import org.openrsc.editor.model.brush.TerrainProperty;
-import org.openrsc.editor.model.brush.TerrainTemplate;
+import org.openrsc.editor.model.template.TerrainProperty;
+import org.openrsc.editor.model.template.TerrainTemplate;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -71,5 +72,10 @@ public class TerrainPropertySlider extends JPanel {
         label.setText(getPropertyLabel(value));
         slider.setValue(Optional.ofNullable(value).orElseGet(() -> 0));
         this.currentTemplate = template;
+    }
+
+    @Subscribe
+    public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
+        this.currentTemplate = TemplateUtil.merge(currentTemplate, event);
     }
 }
