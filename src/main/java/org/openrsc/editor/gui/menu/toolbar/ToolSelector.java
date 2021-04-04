@@ -1,4 +1,4 @@
-package org.openrsc.editor.gui.controls.toolbar;
+package org.openrsc.editor.gui.menu.toolbar;
 
 import org.openrsc.editor.model.EditorTool;
 

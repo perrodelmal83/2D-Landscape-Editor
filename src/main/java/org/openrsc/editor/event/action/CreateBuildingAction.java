@@ -11,7 +11,8 @@ public class CreateBuildingAction {
     private final SelectRegion selectRegion;
     private final int stories = 1;
     private final boolean withBasement = false;
-    private final TerrainTemplate buildingFloor;
+    private final TerrainTemplate roof;
+    private final TerrainTemplate floor;
     private final TerrainTemplate diagonalWall;
     private final TerrainTemplate reverseDiagonalWall;
     private final TerrainTemplate northWall;

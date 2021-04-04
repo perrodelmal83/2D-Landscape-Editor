@@ -4,9 +4,9 @@ import com.google.common.eventbus.EventBus;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.gui.controls.SectorNavigator;
 import org.openrsc.editor.gui.controls.TileControlPanel;
-import org.openrsc.editor.gui.controls.toolbar.ToolSelector;
 import org.openrsc.editor.gui.graphics.EditorCanvas;
 import org.openrsc.editor.gui.menu.EditorMenuBar;
+import org.openrsc.editor.gui.menu.toolbar.ToolSelector;
 import org.openrsc.editor.model.brush.BrushOption;
 
 import javax.swing.BoxLayout;

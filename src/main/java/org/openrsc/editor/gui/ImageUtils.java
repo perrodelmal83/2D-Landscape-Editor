@@ -1,6 +1,6 @@
 package org.openrsc.editor.gui;
 
-import org.openrsc.editor.gui.controls.toolbar.ToolSelector;
+import org.openrsc.editor.gui.menu.toolbar.ToolSelector;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;

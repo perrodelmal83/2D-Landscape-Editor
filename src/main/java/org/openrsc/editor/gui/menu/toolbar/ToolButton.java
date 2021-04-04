@@ -1,4 +1,4 @@
-package org.openrsc.editor.gui.controls.toolbar;
+package org.openrsc.editor.gui.menu.toolbar;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;

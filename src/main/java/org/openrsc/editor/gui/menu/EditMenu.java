@@ -1,10 +1,15 @@
 package org.openrsc.editor.gui.menu;
 
+import com.google.common.eventbus.EventBus;
+import org.openrsc.editor.event.EventBusFactory;
+import org.openrsc.editor.event.action.GenerateElevationAction;
 import org.openrsc.editor.gui.GuiUtils;
 
-import javax.swing.*;
+import javax.swing.JMenuItem;
 
 public class EditMenu extends BaseMenu {
+    private static final EventBus eventBus = EventBusFactory.getEventBus();
+
     public EditMenu(Runnable onUndo, Runnable onCopy, Runnable onPaste) {
         super("Edit");
 
@@ -27,5 +32,10 @@ public class EditMenu extends BaseMenu {
         pasteTile.setEnabled(false);
         pasteTile.addActionListener(GuiUtils.fromRunnable(onPaste));
         add(pasteTile);
+
+        JMenuItem generateElevation = new JMenuItem("Generate Elevation");
+        generateElevation.setEnabled(true);
+        generateElevation.addActionListener((evt) -> eventBus.post(new GenerateElevationAction()));
+        add(generateElevation);
     }
 }

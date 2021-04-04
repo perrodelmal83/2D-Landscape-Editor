@@ -22,6 +22,7 @@ public class TerrainPropertySlider extends JPanel {
     private final JLabel label;
     private static final EventBus eventBus = EventBusFactory.getEventBus();
     private TerrainTemplate currentTemplate;
+    private boolean dropNextEvent = false;
 
     public TerrainPropertySlider(TerrainProperty terrainProperty) {
         super();
@@ -45,7 +46,7 @@ public class TerrainPropertySlider extends JPanel {
         slider.setMinimum(0);
         slider.addChangeListener(evt -> {
             // Check that this event is a result of user sliding the item
-            if (evt.getSource() == slider) {
+            if (evt.getSource() == slider && !dropNextEvent) {
                 TerrainTemplate.TerrainTemplateBuilder builder =
                         this.currentTemplate != null ? this.currentTemplate.toBuilder() : TerrainTemplate.builder();
                 eventBus.post(
@@ -57,6 +58,7 @@ public class TerrainPropertySlider extends JPanel {
                 );
                 label.setText(getPropertyLabel(slider.getValue()));
             }
+            dropNextEvent = false;
         });
         add(slider);
     }
@@ -67,15 +69,15 @@ public class TerrainPropertySlider extends JPanel {
 
     @Subscribe
     public void onTerrainPresetSelected(TerrainPresetSelectedEvent event) {
-        TerrainTemplate template = event.getTemplate();
-        Integer value = template.getValues().get(this.terrainProperty);
+        currentTemplate = event.getTemplate();
+        Integer value = currentTemplate.getValues().get(terrainProperty);
         label.setText(getPropertyLabel(value));
+        dropNextEvent = true;
         slider.setValue(Optional.ofNullable(value).orElseGet(() -> 0));
-        this.currentTemplate = template;
     }
 
     @Subscribe
     public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
-        this.currentTemplate = TemplateUtil.merge(currentTemplate, event);
+        currentTemplate = TemplateUtil.merge(currentTemplate, event);
     }
 }

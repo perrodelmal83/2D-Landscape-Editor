@@ -8,11 +8,11 @@ import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
-import org.openrsc.editor.event.action.CreateBuildingAction;
+import org.openrsc.editor.event.action.GenerateElevationAction;
+import org.openrsc.editor.generator.DiamondSquare;
+import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.Tile;
-import org.openrsc.editor.model.definition.WallDefinition;
-import org.openrsc.editor.model.template.TerrainProperty;
 import org.openrsc.editor.model.template.TerrainTemplate;
 
 import javax.swing.JOptionPane;
@@ -26,7 +26,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -56,6 +55,7 @@ public class EditorCanvas extends Canvas implements Runnable {
 
     // Controlled by tool delegates
     public TerrainTemplate currentTemplate = TerrainTemplate.builder().build();
+    private PathVisitor pathVisitor;
 
     public EditorCanvas() {
         super();
@@ -151,10 +151,6 @@ public class EditorCanvas extends Canvas implements Runnable {
             currentToolDelegate.render(offscreenGraphics);
         }
 
-        if (debugTile != null) {
-            drawTileBorder(debugTile, Color.GREEN);
-        }
-
         g2d.drawImage(offscreenImage, 0, 0, this);
     }
 
@@ -192,7 +188,11 @@ public class EditorCanvas extends Canvas implements Runnable {
         }
     }
 
-    protected Tile getTileByGridCoords(final int x, final int y) {
+    public Tile getTileByGridCoords(Point p) {
+        return getTileByGridCoords(p.x, p.y);
+    }
+
+    public Tile getTileByGridCoords(final int x, final int y) {
         try {
             return EditorCanvas.tileGrid[x][y];
         } catch (Exception ex) {
@@ -309,123 +309,6 @@ public class EditorCanvas extends Canvas implements Runnable {
         }
     }
 
-    @Subscribe
-    public void onCreateBuildingAction(CreateBuildingAction evt) {
-        String input = JOptionPane.showInputDialog("Enter wall int");
-        WallDefinition wallDefinition = WallDefinition.NORMAL.get(Integer.parseInt(input));
-        CreateBuildingAction wallTest = CreateBuildingAction
-                .builder()
-                .buildingFloor(TerrainTemplate.builder().value(TerrainProperty.GROUND_OVERLAY, 1).build())
-                .eastWall(TerrainTemplate.builder().value(TerrainProperty.WALL_EAST, wallDefinition.getEastWall()).build())
-                .northWall(TerrainTemplate.builder().value(TerrainProperty.WALL_NORTH, wallDefinition.getNorthWall()).build())
-                .diagonalWall(TerrainTemplate.builder().value(TerrainProperty.WALL_DIAGONAL, wallDefinition.getDiagonalWallForward()).build())
-                .reverseDiagonalWall(TerrainTemplate.builder().value(TerrainProperty.WALL_DIAGONAL, wallDefinition.getDiagonalWallBackward()).build())
-                .build();
-        Thread t = new Thread(() -> traversePoints(
-                evt.getSelectRegion().getPoints(),
-                wallTest
-        ));
-        t.start();
-    }
-
-    public Tile debugTile = null;
-
-    public void traversePoints(List<Point> gridPoints, CreateBuildingAction action) {
-        // Walls
-        gridPoints.stream().reduce((pointA, pointB) -> {
-            traverseLine(action, pointA, pointB);
-            return pointB;
-        });
-
-        // Floors
-        // Figure out points contained by polygon... seems difficult
-    }
-
-    public void traverseLine(CreateBuildingAction action, Point a, Point b) {
-        try {
-            double deltaY = b.getY() - a.getY();
-            double deltaX = b.getX() - a.getX();
-            if (deltaX == 0) {
-                // Vertical line
-                // Don't use mathematical slope (divide by zero)
-                // Just simply iterate with y+1 each step until reach point b
-                Point currentPoint = new Point(a.x, Math.min(a.y, b.y));
-                Point destinationPoint = new Point(a.x, Math.max(a.y, b.y));
-                while (!currentPoint.equals(destinationPoint)) {
-                    Tile updatedTile = getTileByGridCoords(currentPoint.x, currentPoint.y);
-                    debugTile = updatedTile;
-                    TemplateUtil.applyBrush(updatedTile, action.getEastWall());
-                    currentPoint = new Point(currentPoint.x, currentPoint.y + 1);
-                    Thread.sleep(50);
-                }
-            } else if (deltaY == 0) {
-                Point currentPoint = new Point(Math.min(a.x, b.x), a.y);
-                Point destinationPoint = new Point(Math.max(a.x, b.x), a.y);
-                while (!currentPoint.equals(destinationPoint)) {
-                    Tile updatedTile = getTileByGridCoords(currentPoint.x, currentPoint.y);
-                    debugTile = updatedTile;
-                    TemplateUtil.applyBrush(updatedTile, action.getNorthWall());
-                    currentPoint = new Point(currentPoint.x + 1, currentPoint.y);
-                    Thread.sleep(50);
-                }
-            } else {
-                Point currentPoint = new Point(a);
-                double calculatedX = currentPoint.x;
-                double calculatedY = currentPoint.y;
-                int necessarySteps = (int) Math.max(Math.abs(deltaY), Math.abs(deltaX));
-                // Express slope in x,y per step
-                double slopeX = deltaX / necessarySteps;
-                double slopeY = deltaY / necessarySteps;
-
-                /*
-                 * Vertex is positioned at the top-right corner of selected tile (origin).
-                 * If the slope is negative, the user will expect it to draw from the vertex, away
-                 * from the current tile (not inclusive).
-                 */
-                int xAdjuster = slopeX < 0 ? -1 : 0;
-                int yAdjuster = slopeY < 0 ? -1 : 0;
-                for (int steps = 0; steps <= necessarySteps; steps++) {
-                    debugTile = getTileByGridCoords(currentPoint.x, currentPoint.y);
-                    Point nextPoint = new Point(
-                            (int) (calculatedX + .5 + (steps * slopeX)) + xAdjuster,
-                            (int) (calculatedY + .5 + (steps * slopeY)) + yAdjuster
-                    );
-
-                    Point tilePoint = new Point(currentPoint.x, currentPoint.y);
-                    Tile updatedTile = getTileByGridCoords(tilePoint.x, tilePoint.y);
-
-                    if (steps == 0 && (slopeX < 0 || slopeY < 0)) {
-                        currentPoint = nextPoint;
-                        continue;
-                    }
-
-                    if (nextPoint.x != currentPoint.x && nextPoint.y != currentPoint.y) {
-                        if (slopeX / slopeY < 0) {
-                            TemplateUtil.applyBrush(updatedTile, action.getReverseDiagonalWall());
-                        } else {
-                            TemplateUtil.applyBrush(updatedTile, action.getDiagonalWall());
-                        }
-                        // Both x and y changed, diagonal wall
-                    } else if (nextPoint.x != currentPoint.x) {
-                        if (slopeY < 0) {
-                            updatedTile = getTileByGridCoords(tilePoint.x, tilePoint.y + 1);
-                        }
-                        TemplateUtil.applyBrush(updatedTile, action.getNorthWall());
-                        // Only x changed, horizontal wall
-                    } else if (nextPoint.y != currentPoint.y) {
-                        TemplateUtil.applyBrush(updatedTile, action.getEastWall());
-                        // Only y changed, vertical wall
-                    }
-                    Thread.sleep(300);
-                    currentPoint = nextPoint;
-                }
-            }
-        } catch (Exception e) {
-        }
-
-        Util.sectorModified = true;
-        debugTile = null;
-    }
 
     @Subscribe
     public void onTerrainTemplateUpdate(TerrainTemplateUpdateEvent event) {
@@ -435,5 +318,30 @@ public class EditorCanvas extends Canvas implements Runnable {
     @Subscribe
     public void onTerrainPresetSelected(TerrainPresetSelectedEvent event) {
         this.currentTemplate = event.getTemplate();
+    }
+
+    @Subscribe
+    public void onGenerateElevationAction(GenerateElevationAction action) {
+        generateRandomElevation(tileGrid);
+        Util.sectorModified = true;
+    }
+
+    public static void generateRandomElevation(Tile[][] tiles) {
+        String input = JOptionPane.showInputDialog("Enter random seed");
+        long randomSeed = Long.parseLong(input);
+        DiamondSquare ds = new DiamondSquare(randomSeed, 6);
+        float[][] data = ds.getData();
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles.length; j++) {
+                float dataPoint = data[i / 2][j / 2];
+                tiles[i][j].setGroundElevation((byte) roundToNearest10((int) (dataPoint * 254)));
+                tiles[i][j].setGroundTexture((byte) ((int) (data[i][j] * -170) + 200));
+            }
+        }
+    }
+
+    public static int roundToNearest10(int num) {
+        float f = num / 10f;
+        return Math.round(f) * 10;
     }
 }

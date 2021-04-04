@@ -2,13 +2,21 @@ package org.openrsc.editor.gui.graphics;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import org.openrsc.editor.Util;
 import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.action.ConvertPathToSelectionAction;
+import org.openrsc.editor.event.action.CreateBuildingAction;
 import org.openrsc.editor.event.selection.SelectRegionUpdateEvent;
 import org.openrsc.editor.gui.graphics.stroke.DashedStrokeGenerator;
+import org.openrsc.editor.gui.graphics.visitor.CreateBuildingVisitorListener;
+import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.SelectRegion;
+import org.openrsc.editor.model.definition.OverlayDefinition;
+import org.openrsc.editor.model.definition.RoofDefinition;
+import org.openrsc.editor.model.definition.WallDefinition;
+import org.openrsc.editor.model.definition.WallDirection;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -16,6 +24,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SelectToolDelegate extends ToolDelegate {
     private static final EventBus eventBus = EventBusFactory.getEventBus();
@@ -94,20 +103,14 @@ public class SelectToolDelegate extends ToolDelegate {
     public void render(Graphics2D g) {
         if (selectRegion != null) {
             List<Point> points = selectRegion.getPoints();
-
-            // Construct polygon
-            int nPoints = points.size();
-            int[] allX = new int[nPoints];
-            int[] allY = new int[nPoints];
-            for (int i = 0; i < nPoints; i++) {
-                Point point = points.get(i);
-                Point pixelPoint = editorCanvas.gridPointToPixelPoint(point);
-                allX[i] = pixelPoint.x;
-                allY[i] = pixelPoint.y;
+            Polygon polygon = Util.constructPolygon(
+                    points.stream().map(editorCanvas::gridPointToPixelPoint).collect(Collectors.toList())
+            );
+            for (Point point : points) {
                 editorCanvas.drawTileBorder(editorCanvas.getTileByGridCoords(point.x, point.y));
             }
 
-            Polygon polygon = new Polygon(allX, allY, nPoints);
+
             g.setColor(Color.WHITE);
             g.setStroke(dashedStrokeGenerator.get());
             g.draw(polygon);
@@ -138,5 +141,27 @@ public class SelectToolDelegate extends ToolDelegate {
     public void onConvertPathToSelection(ConvertPathToSelectionAction action) {
         eventBus.post(new EditorToolSelectedEvent(EditorTool.SELECT));
         setSelectRegion(SelectRegion.builder().points(action.getPoints()).build());
+    }
+
+    @Subscribe
+    public void onCreateBuildingAction(CreateBuildingAction evt) {
+        WallDefinition wallDefinition = WallDefinition.NORMAL.get(1);
+        OverlayDefinition overlayDefinition = OverlayDefinition.WOODEN_FLOOR;
+        RoofDefinition roofDefinition = RoofDefinition.STANDARD_ROOF;
+        CreateBuildingAction wallTest = CreateBuildingAction
+                .builder()
+                .floor(overlayDefinition.toTerrainTemplate())
+                .eastWall(wallDefinition.toTerrainTemplate(WallDirection.EAST))
+                .northWall(wallDefinition.toTerrainTemplate(WallDirection.NORTH))
+                .diagonalWall(wallDefinition.toTerrainTemplate(WallDirection.DIAGONAL_FORWARD))
+                .reverseDiagonalWall(wallDefinition.toTerrainTemplate(WallDirection.DIAGONAL_BACKWARD))
+                .roof(roofDefinition.toTerrainTemplate())
+                .build();
+        PathVisitor pathVisitor = new PathVisitor(editorCanvas);
+        Thread t = new Thread(() -> pathVisitor.visit(
+                evt.getSelectRegion().getPoints(),
+                new CreateBuildingVisitorListener(wallTest)
+        ));
+        t.start();
     }
 }

@@ -6,6 +6,7 @@ import org.openrsc.editor.Util;
 import org.openrsc.editor.model.data.GameObjectLoc;
 import org.openrsc.editor.model.data.ItemLoc;
 import org.openrsc.editor.model.data.NpcLoc;
+import org.openrsc.editor.model.definition.WallDefinition;
 
 import java.awt.Point;
 import java.awt.Shape;
@@ -210,6 +211,11 @@ public class Tile {
         tile.rightBorderWall = in.get();
         tile.topBorderWall = in.get();
         tile.diagonalWalls = in.getInt();
+        if (
+                !WallDefinition.NORMAL.containsKey(topBorderWall)
+        ) {
+            
+        }
         return tile;
     }
 
