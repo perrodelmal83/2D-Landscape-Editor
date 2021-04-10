@@ -8,14 +8,11 @@ import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
-import org.openrsc.editor.event.action.GenerateElevationAction;
-import org.openrsc.editor.generator.DiamondSquare;
 import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.Tile;
 import org.openrsc.editor.model.template.TerrainTemplate;
 
-import javax.swing.JOptionPane;
 import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
@@ -46,6 +43,7 @@ public class EditorCanvas extends Canvas implements Runnable {
     private final PathToolDelegate pathToolDelegate;
     private final StampToolDelegate stampToolDelegate;
     private final ToolDelegate inspectToolDelegate;
+    private final PlaceDoorWindowDelegate placeDoorWindowDelegate;
 
     public static Tile[][] tileGrid;
     private Graphics2D g2d;
@@ -63,6 +61,7 @@ public class EditorCanvas extends Canvas implements Runnable {
         this.pathToolDelegate = new PathToolDelegate(this);
         this.stampToolDelegate = new StampToolDelegate(this);
         this.inspectToolDelegate = new InspectToolDelegate(this);
+        this.placeDoorWindowDelegate = new PlaceDoorWindowDelegate(this);
 
         init();
         setCurrentTool(selectToolDelegate);
@@ -90,7 +89,7 @@ public class EditorCanvas extends Canvas implements Runnable {
             setLocation(0, 60);
             setSize(new Dimension(GRID_PIXEL_SIZE, GRID_PIXEL_SIZE));
             setBackground(Color.BLACK);
-            Util.prepareData();
+            Util.prepareData(null);
         } catch (Exception e) {
             Util.error(e);
         }
@@ -200,9 +199,9 @@ public class EditorCanvas extends Canvas implements Runnable {
         }
     }
 
-    public static void drawLine(int x1, int y1, int x2, int y2, Color color) {
+    public static void drawLine(int x1, int y1, int x2, int y2, Color color, int thickness) {
         offscreenGraphics.setColor(color);
-        offscreenGraphics.setStroke(new BasicStroke(2));
+        offscreenGraphics.setStroke(new BasicStroke(thickness));
         offscreenGraphics.draw(new Line2D.Double(x1, y1, x2, y2));
     }
 
@@ -211,13 +210,13 @@ public class EditorCanvas extends Canvas implements Runnable {
     }
 
     public void drawTileBorder(Tile tile, Color color) {
-        drawLine(tile, LineLocation.BORDER_TOP, color);
-        drawLine(tile, LineLocation.BORDER_BOTTOM, color);
-        drawLine(tile, LineLocation.BORDER_RIGHT, color);
-        drawLine(tile, LineLocation.BORDER_LEFT, color);
+        drawLine(tile, LineLocation.BORDER_TOP, color, 2);
+        drawLine(tile, LineLocation.BORDER_BOTTOM, color, 2);
+        drawLine(tile, LineLocation.BORDER_RIGHT, color, 2);
+        drawLine(tile, LineLocation.BORDER_LEFT, color, 2);
     }
 
-    public static void drawLine(Tile tile, LineLocation lineLocation, Color color) {
+    public static void drawLine(Tile tile, LineLocation lineLocation, Color color, int thickness) {
         switch (lineLocation) {
             case BORDER_TOP:
                 drawLine(
@@ -225,7 +224,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY(),
                         tile.getX() + TILE_SIZE,
                         tile.getY(),
-                        color
+                        color,
+                        thickness
                 );
                 break;
             case BORDER_RIGHT:
@@ -234,7 +234,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY(),
                         tile.getX() + TILE_SIZE,
                         tile.getY() + TILE_SIZE,
-                        color
+                        color,
+                        thickness
                 );
                 break;
             case BORDER_BOTTOM:
@@ -243,7 +244,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY() + TILE_SIZE,
                         tile.getX() + TILE_SIZE,
                         tile.getY() + TILE_SIZE,
-                        color
+                        color,
+                        thickness
                 );
                 break;
             case BORDER_LEFT:
@@ -252,7 +254,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY(),
                         tile.getX(),
                         tile.getY() + TILE_SIZE,
-                        color
+                        color,
+                        thickness
                 );
                 break;
             case DIAGONAL_FROM_TOP_LEFT:
@@ -261,7 +264,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY(),
                         tile.getX() + TILE_SIZE,
                         tile.getY() + TILE_SIZE,
-                        color
+                        color,
+                        thickness
                 );
                 break;
             case DIAGONAL_FROM_TOP_RIGHT:
@@ -270,7 +274,8 @@ public class EditorCanvas extends Canvas implements Runnable {
                         tile.getY(),
                         tile.getX(),
                         tile.getY() + TILE_SIZE,
-                        color
+                        color,
+                        thickness
                 );
                 break;
         }
@@ -306,6 +311,9 @@ public class EditorCanvas extends Canvas implements Runnable {
             case INSPECT:
                 setCurrentTool(inspectToolDelegate);
                 break;
+            case PLACE_DOOR_WINDOW:
+                setCurrentTool(placeDoorWindowDelegate);
+                break;
         }
     }
 
@@ -318,26 +326,6 @@ public class EditorCanvas extends Canvas implements Runnable {
     @Subscribe
     public void onTerrainPresetSelected(TerrainPresetSelectedEvent event) {
         this.currentTemplate = event.getTemplate();
-    }
-
-    @Subscribe
-    public void onGenerateElevationAction(GenerateElevationAction action) {
-        generateRandomElevation(tileGrid);
-        Util.sectorModified = true;
-    }
-
-    public static void generateRandomElevation(Tile[][] tiles) {
-        String input = JOptionPane.showInputDialog("Enter random seed");
-        long randomSeed = Long.parseLong(input);
-        DiamondSquare ds = new DiamondSquare(randomSeed, 6);
-        float[][] data = ds.getData();
-        for (int i = 0; i < tiles.length; i++) {
-            for (int j = 0; j < tiles.length; j++) {
-                float dataPoint = data[i / 2][j / 2];
-                tiles[i][j].setGroundElevation((byte) roundToNearest10((int) (dataPoint * 254)));
-                tiles[i][j].setGroundTexture((byte) ((int) (data[i][j] * -170) + 200));
-            }
-        }
     }
 
     public static int roundToNearest10(int num) {

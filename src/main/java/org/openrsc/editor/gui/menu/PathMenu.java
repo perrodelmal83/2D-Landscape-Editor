@@ -7,6 +7,8 @@ import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.SelectPathUpdateEvent;
 import org.openrsc.editor.event.action.ClearPathAction;
 import org.openrsc.editor.event.action.ConvertPathToSelectionAction;
+import org.openrsc.editor.event.action.StrokePathAction;
+import org.openrsc.editor.gui.dialog.StrokePathDialog;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.SelectPath;
 
@@ -34,6 +36,16 @@ public class PathMenu extends BaseMenu {
                 new ConvertPathToSelectionAction(selectPath.getPoints())
         ));
         add(convertToSelection);
+
+        JMenuItem strokePath = new JMenuItem();
+        strokePath.setText("Stroke Path");
+        strokePath.addActionListener(evt -> new StrokePathDialog(
+                (configuration) -> eventBus.post(new StrokePathAction(
+                        selectPath,
+                        configuration
+                ))
+        ));
+        add(strokePath);
     }
 
     @Subscribe

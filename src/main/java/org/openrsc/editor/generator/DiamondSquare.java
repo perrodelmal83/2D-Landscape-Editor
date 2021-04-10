@@ -1,17 +1,15 @@
 package org.openrsc.editor.generator;
 
-import lombok.Getter;
-
 import java.util.Random;
 
-@Getter
-public class DiamondSquare {
+public class DiamondSquare implements TerrainGenerator {
 
     private final float[][] data;
     private final int width;
     private final int height;
 
-    public DiamondSquare(long mseed, int n) {
+    public DiamondSquare(long mseed) {
+        int n = 6;
         //size of grid to generate, note this must be a
         //value 2^n+1
         int DATA_SIZE = (1 << n) + 1;
@@ -123,5 +121,10 @@ public class DiamondSquare {
             System.out.println();
         }
 
+    }
+
+    @Override
+    public float getData(int x, int y) {
+        return data[x][y];
     }
 }

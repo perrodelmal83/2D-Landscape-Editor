@@ -7,16 +7,14 @@ import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.action.ConvertPathToSelectionAction;
 import org.openrsc.editor.event.action.CreateBuildingAction;
+import org.openrsc.editor.event.action.GenerateLandscapeAction;
 import org.openrsc.editor.event.selection.SelectRegionUpdateEvent;
 import org.openrsc.editor.gui.graphics.stroke.DashedStrokeGenerator;
 import org.openrsc.editor.gui.graphics.visitor.CreateBuildingVisitorListener;
+import org.openrsc.editor.gui.graphics.visitor.GenerateLandscapeVisitorListener;
 import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.SelectRegion;
-import org.openrsc.editor.model.definition.OverlayDefinition;
-import org.openrsc.editor.model.definition.RoofDefinition;
-import org.openrsc.editor.model.definition.WallDefinition;
-import org.openrsc.editor.model.definition.WallDirection;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -106,10 +104,10 @@ public class SelectToolDelegate extends ToolDelegate {
             Polygon polygon = Util.constructPolygon(
                     points.stream().map(editorCanvas::gridPointToPixelPoint).collect(Collectors.toList())
             );
-            for (Point point : points) {
-                editorCanvas.drawTileBorder(editorCanvas.getTileByGridCoords(point.x, point.y));
-            }
-
+//            for (Point point : points) {
+//                Optional.ofNullable(editorCanvas.getTileByGridCoords(point.x, point.y))
+//                        .ifPresent(editorCanvas::drawTileBorder);
+//            }
 
             g.setColor(Color.WHITE);
             g.setStroke(dashedStrokeGenerator.get());
@@ -145,22 +143,20 @@ public class SelectToolDelegate extends ToolDelegate {
 
     @Subscribe
     public void onCreateBuildingAction(CreateBuildingAction evt) {
-        WallDefinition wallDefinition = WallDefinition.NORMAL.get(1);
-        OverlayDefinition overlayDefinition = OverlayDefinition.WOODEN_FLOOR;
-        RoofDefinition roofDefinition = RoofDefinition.STANDARD_ROOF;
-        CreateBuildingAction wallTest = CreateBuildingAction
-                .builder()
-                .floor(overlayDefinition.toTerrainTemplate())
-                .eastWall(wallDefinition.toTerrainTemplate(WallDirection.EAST))
-                .northWall(wallDefinition.toTerrainTemplate(WallDirection.NORTH))
-                .diagonalWall(wallDefinition.toTerrainTemplate(WallDirection.DIAGONAL_FORWARD))
-                .reverseDiagonalWall(wallDefinition.toTerrainTemplate(WallDirection.DIAGONAL_BACKWARD))
-                .roof(roofDefinition.toTerrainTemplate())
-                .build();
         PathVisitor pathVisitor = new PathVisitor(editorCanvas);
         Thread t = new Thread(() -> pathVisitor.visit(
                 evt.getSelectRegion().getPoints(),
-                new CreateBuildingVisitorListener(wallTest)
+                new CreateBuildingVisitorListener(evt.getConfiguration())
+        ));
+        t.start();
+    }
+
+    @Subscribe
+    public void onGenerateLandscapeAction(GenerateLandscapeAction evt) {
+        PathVisitor pathVisitor = new PathVisitor(editorCanvas);
+        Thread t = new Thread(() -> pathVisitor.visit(
+                evt.getSelectRegion().getPoints(),
+                new GenerateLandscapeVisitorListener(evt.getConfiguration())
         ));
         t.start();
     }

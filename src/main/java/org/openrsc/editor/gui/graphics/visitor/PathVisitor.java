@@ -79,7 +79,6 @@ public class PathVisitor {
                     Tile updatedTile = editorCanvas.getTileByGridCoords(tilePoint.x, tilePoint.y);
                     debugTile = updatedTile;
                     listener.onEastWallVisited(updatedTile);
-//                    TemplateUtil.applyBrush(updatedTile, configuration.getEastWall());
                     currentPoint = new Point(currentPoint.x, currentPoint.y + 1);
                 }
             } else if (deltaY == 0) {
@@ -90,7 +89,6 @@ public class PathVisitor {
                     Tile updatedTile = editorCanvas.getTileByGridCoords(tilePoint.x, tilePoint.y);
                     debugTile = updatedTile;
                     listener.onNorthWallVisited(updatedTile);
-//                    TemplateUtil.applyBrush(updatedTile, configuration.getNorthWall());
                     currentPoint = new Point(currentPoint.x + 1, currentPoint.y);
                 }
             } else {
@@ -129,10 +127,8 @@ public class PathVisitor {
 
                         if (slopeX / slopeY < 0) {
                             listener.onBackwardDiagonalVisited(updatedTile);
-//                            TemplateUtil.applyBrush(updatedTile, configuration.getReverseDiagonalWall());
                         } else {
                             listener.onForwardDiagonalVisited(updatedTile);
-//                            TemplateUtil.applyBrush(updatedTile, configuration.getDiagonalWall());
                         }
                         diagWallPoints.add(tilePoint);
 
@@ -142,16 +138,14 @@ public class PathVisitor {
                             updatedTile = editorCanvas.getTileByGridCoords(tilePoint.x, tilePoint.y + 1);
                         }
                         listener.onNorthWallVisited(updatedTile);
-//                        TemplateUtil.applyBrush(updatedTile, configuration.getNorthWall());
                     } else if (nextPoint.y != currentPoint.y) {
                         // Only y changed, vertical wall
                         listener.onEastWallVisited(updatedTile);
-//                        TemplateUtil.applyBrush(updatedTile, configuration.getEastWall());
                     }
                     currentPoint = nextPoint;
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         Util.sectorModified = true;

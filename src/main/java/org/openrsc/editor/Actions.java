@@ -109,4 +109,8 @@ public class Actions {
             Util.sectorModified = false;
         }
     }
+
+    public static void onOpenDataDir(File dir) {
+        Util.prepareData(dir);
+    }
 }

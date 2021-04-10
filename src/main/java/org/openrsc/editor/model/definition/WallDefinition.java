@@ -6,6 +6,7 @@ import org.openrsc.editor.model.template.Template;
 import org.openrsc.editor.model.template.TerrainProperty;
 import org.openrsc.editor.model.template.TerrainTemplate;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Getter
 public enum WallDefinition implements Template, LabeledDefinition {
+    NONE("None", 0, 0, 0, 0, WallType.WALL),
     STONE_WALL("Stone wall", 1, 1, 1, 12001, WallType.WALL),
     WOODEN_DOOR_FRAME("Wooden door frame", 2, 2, 2, 12002, WallType.DOOR_FRAME),
     STONE_DOOR_FRAME("Stone door frame", 3, 3, 3, 12003, WallType.DOOR_FRAME),
@@ -50,7 +52,7 @@ public enum WallDefinition implements Template, LabeledDefinition {
         NORMAL = new HashMap<>();
         DIAGONAL_BACKWARDS = new HashMap<>();
 
-        Arrays.stream(WallDefinition.values()).forEach(wallDefinition -> {
+        Arrays.stream(WallDefinition.values()).filter(val -> val != NONE).forEach(wallDefinition -> {
             NORMAL.put(
                     wallDefinition.getNorthWall(),
                     wallDefinition
@@ -79,5 +81,30 @@ public enum WallDefinition implements Template, LabeledDefinition {
                 break;
         }
         return builder.build();
+    }
+
+    public static WallDefinition fromInt(int i) {
+        if (i >= 12000) {
+            return DIAGONAL_BACKWARDS.get(i);
+        }
+
+        return NORMAL.get(i);
+    }
+
+    public static Color getWallColor(WallDefinition definition) {
+        if (definition.getWallType() == WallType.WALL) {
+            return ColorConstants.WALL_OUTLINE_COLOR;
+        } else if (definition.getWallType() == WallType.WINDOW) {
+            return ColorConstants.WINDOW_OUTLINE_COLOR;
+        } else if (definition.getWallType() == WallType.DOOR_FRAME) {
+            return ColorConstants.DOOR_OUTLINE_COLOR;
+        } else {
+            return ColorConstants.INVISIBLE;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return label;
     }
 }

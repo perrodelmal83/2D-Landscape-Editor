@@ -12,6 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Getter
 public enum RoofDefinition implements LabeledDefinition {
+    NONE("None", 0),
     STANDARD_ROOF("Standard Roof", 1),
     WOODEN_PANEL_ROOF("Wooden Panel Roof", 2),
     UNKNOWN("Unknown", 3);
@@ -21,7 +22,7 @@ public enum RoofDefinition implements LabeledDefinition {
     static {
         ROOFS = new HashMap<>();
 
-        Arrays.stream(RoofDefinition.values()).forEach(roofDefinition -> {
+        Arrays.stream(RoofDefinition.values()).filter(def -> def != NONE).forEach(roofDefinition -> {
             ROOFS.put(roofDefinition.getRoof(), roofDefinition);
         });
     }
@@ -33,5 +34,10 @@ public enum RoofDefinition implements LabeledDefinition {
         return TerrainTemplate.builder()
                 .value(TerrainProperty.ROOF_TEXTURE, getRoof())
                 .build();
+    }
+
+    @Override
+    public String toString() {
+        return label;
     }
 }

@@ -5,14 +5,14 @@ import org.openrsc.editor.event.DisplayConfigurationUpdateEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.gui.GuiUtils;
 import org.openrsc.editor.gui.ImageUtils;
-import org.openrsc.editor.model.DisplayConfiguration;
-import org.openrsc.editor.model.DisplayConfigurationProperty;
+import org.openrsc.editor.model.configuration.DisplayConfiguration;
+import org.openrsc.editor.model.configuration.DisplayConfigurationProperty;
 
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import java.util.Arrays;
 
-import static org.openrsc.editor.model.DisplayConfiguration.DEFAULT_DISPLAY_CONFIGURATION;
+import static org.openrsc.editor.model.configuration.DisplayConfiguration.DEFAULT_DISPLAY_CONFIGURATION;
 
 public class ViewMenu extends BaseMenu {
     private static final EventBus eventBus = EventBusFactory.getEventBus();

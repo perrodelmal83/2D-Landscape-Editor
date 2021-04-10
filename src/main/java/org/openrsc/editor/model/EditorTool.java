@@ -11,7 +11,8 @@ public enum EditorTool {
     CLONE("Clone", "/icons/copy.png"),
     STAMP("Stamp", "/icons/stamp.png"),
     DRAW_PATH("Path", "/icons/draw-path.png"),
-    INSPECT("Inspect", "/icons/inspect.png");
+    INSPECT("Inspect", "/icons/inspect.png"),
+    PLACE_DOOR_WINDOW("Place Door or Window", "/icons/place-door-window.png");
 
     private final String text;
     private final String resource;

@@ -5,6 +5,9 @@ import com.google.common.eventbus.Subscribe;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.SelectPathUpdateEvent;
 import org.openrsc.editor.event.action.ClearPathAction;
+import org.openrsc.editor.event.action.StrokePathAction;
+import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
+import org.openrsc.editor.gui.graphics.visitor.StrokePathVisitorListener;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.SelectPath;
 import org.openrsc.editor.model.Tile;
@@ -143,5 +146,15 @@ public class PathToolDelegate extends ToolDelegate {
     @Subscribe
     public void onClearPathAction(ClearPathAction action) {
         clearPath();
+    }
+
+    @Subscribe
+    public void onStrokePathAction(StrokePathAction evt) {
+        PathVisitor pathVisitor = new PathVisitor(editorCanvas);
+        Thread t = new Thread(() -> pathVisitor.visit(
+                evt.getSelectPath().getPoints(),
+                new StrokePathVisitorListener(evt.getConfiguration()))
+        );
+        t.start();
     }
 }

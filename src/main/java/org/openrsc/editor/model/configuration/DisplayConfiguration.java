@@ -1,4 +1,4 @@
-package org.openrsc.editor.model;
+package org.openrsc.editor.model.configuration;
 
 import lombok.Builder;
 import lombok.Getter;
