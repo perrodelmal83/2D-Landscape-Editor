@@ -104,6 +104,11 @@ public enum BrushOption {
             TerrainTemplate.builder()
                     .value(TerrainProperty.ROOF_TEXTURE, 1)
                     .build()
+    ),
+
+    CUSTOM(
+            "Configure your own",
+            null
     );
 
     private final String label;

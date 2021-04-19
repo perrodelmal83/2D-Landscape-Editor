@@ -48,8 +48,7 @@ public class PerlinNoise implements TerrainGenerator {
 
     @Override
     public float getData(int x, int y) {
-        float newX = x / 10f;
-        return smoothNoise2D(newX, y, 1f) + 0.5f;
+        return smoothNoise2D(x, y, 1f) + 0.5f;
     }
 
     public float rawNoise(float x) {

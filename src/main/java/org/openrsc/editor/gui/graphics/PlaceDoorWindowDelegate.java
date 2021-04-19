@@ -6,11 +6,13 @@ import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.Tile;
 import org.openrsc.editor.model.definition.WallDefinition;
 import org.openrsc.editor.model.definition.WallDirection;
+import org.openrsc.editor.model.definition.WallType;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
+import java.util.Set;
 
 public class PlaceDoorWindowDelegate extends ToolDelegate {
     private final EditorCanvas editorCanvas;
@@ -35,6 +37,7 @@ public class PlaceDoorWindowDelegate extends ToolDelegate {
     public void onToolMount() {
         this.wallDef = WallDefinition.STONE_WALL;
         new SelectWallDialog(
+                Set.of(WallType.WINDOW, WallType.DOOR_FRAME),
                 (wallDef) -> this.wallDef = wallDef
         );
     }

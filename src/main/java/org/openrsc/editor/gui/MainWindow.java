@@ -1,20 +1,14 @@
 package org.openrsc.editor.gui;
 
-import com.google.common.eventbus.EventBus;
-import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.gui.controls.SectorNavigator;
 import org.openrsc.editor.gui.controls.TileControlPanel;
 import org.openrsc.editor.gui.graphics.EditorCanvas;
 import org.openrsc.editor.gui.menu.EditorMenuBar;
 import org.openrsc.editor.gui.menu.toolbar.ToolSelector;
-import org.openrsc.editor.model.brush.BrushOption;
 
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -28,10 +22,6 @@ import java.awt.Font;
  * hand added.
  */
 public class MainWindow extends JFrame {
-    public static int rotation = 0;
-    public static Timer timer = null;
-    private static final EventBus eventBus = EventBusFactory.getEventBus();
-    public static JComboBox<BrushOption> brushes;
     private EditorCanvas canvas;
 
     public MainWindow() {
@@ -59,10 +49,10 @@ public class MainWindow extends JFrame {
 
         add(new ToolSelector("Tool Selector"), BorderLayout.NORTH);
 
-        TileControlPanel tileControlPanel = new TileControlPanel(800, 37);
+        TileControlPanel tileControlPanel = new TileControlPanel(800, 87);
         add(tileControlPanel);
 
-        SectorNavigator sectorNavigator = new SectorNavigator(800, 500);
+        SectorNavigator sectorNavigator = new SectorNavigator(800, 580);
         add(sectorNavigator);
 
         JPanel gamePanel = new JPanel();
@@ -86,7 +76,6 @@ public class MainWindow extends JFrame {
 
         setSize(1200, 1000);
 
-        /********************************************/
         setTitle("RSC Landscape Editor");
         setLocationRelativeTo(this.getOwner());
 
@@ -96,10 +85,5 @@ public class MainWindow extends JFrame {
         gamePanel.setVisible(false);
         setFocusable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
-
-    public static JButton loadData;
-
-
 }

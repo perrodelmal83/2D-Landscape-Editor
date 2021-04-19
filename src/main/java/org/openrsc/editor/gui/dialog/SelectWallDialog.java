@@ -10,20 +10,22 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.FlowLayout;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 public class SelectWallDialog extends JFrame {
-    public SelectWallDialog(Consumer<WallDefinition> onComplete) {
+    public SelectWallDialog(Collection<WallType> wallTypes, Consumer<WallDefinition> onComplete) {
         super();
 
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout(FlowLayout.CENTER));
 
         JLabel wallsLabel = new JLabel("Walls");
+        WallDefinition[] wallDefinitions = Arrays.stream(WallDefinition.values())
+                .filter(definition -> wallTypes.contains(definition.getWallType()))
+                .toArray(WallDefinition[]::new);
         JComboBox<WallDefinition> walls = new JComboBox<>(
-                Arrays.stream(WallDefinition.values())
-                        .filter(definition -> definition.getWallType() == WallType.WALL)
-                        .toArray(WallDefinition[]::new)
+                wallDefinitions
         );
         walls.setSelectedItem(WallDefinition.STONE_WALL);
         panel.add(wallsLabel);

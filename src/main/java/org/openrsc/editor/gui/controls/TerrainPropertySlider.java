@@ -10,6 +10,7 @@ import org.openrsc.editor.model.template.TerrainProperty;
 import org.openrsc.editor.model.template.TerrainTemplate;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -17,10 +18,12 @@ import java.awt.Dimension;
 import java.util.Optional;
 
 public class TerrainPropertySlider extends JPanel {
+    private static final EventBus eventBus = EventBusFactory.getEventBus();
+
     private final TerrainProperty terrainProperty;
     private final JSlider slider;
     private final JLabel label;
-    private static final EventBus eventBus = EventBusFactory.getEventBus();
+    private final JButton removeButton;
     private TerrainTemplate currentTemplate;
     private boolean dropNextEvent = false;
 
@@ -61,19 +64,36 @@ public class TerrainPropertySlider extends JPanel {
             dropNextEvent = false;
         });
         add(slider);
+
+        removeButton = new JButton("X");
+        removeButton.addActionListener(evt -> {
+            TerrainTemplate.TerrainTemplateBuilder builder =
+                    this.currentTemplate != null ? this.currentTemplate.toBuilder() : TerrainTemplate.builder();
+            eventBus.post(
+                    new TerrainTemplateUpdateEvent(
+                            builder.value(this.terrainProperty, null).build()
+                    )
+            );
+            setSlider(0);
+        });
+        add(removeButton);
     }
 
-    public String getPropertyLabel(Integer value) {
+    private String getPropertyLabel(Integer value) {
         return value != null ? terrainProperty.getLabel() + " (" + value + ")" : terrainProperty.getLabel();
+    }
+
+    private void setSlider(Integer value) {
+        dropNextEvent = true;
+        slider.setValue(Optional.ofNullable(value).orElseGet(() -> 0));
+        label.setText(getPropertyLabel(value));
     }
 
     @Subscribe
     public void onTerrainPresetSelected(TerrainPresetSelectedEvent event) {
         currentTemplate = event.getTemplate();
         Integer value = currentTemplate.getValues().get(terrainProperty);
-        label.setText(getPropertyLabel(value));
-        dropNextEvent = true;
-        slider.setValue(Optional.ofNullable(value).orElseGet(() -> 0));
+        setSlider(value);
     }
 
     @Subscribe

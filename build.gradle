@@ -32,6 +32,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-databind:2.12.2"
 
     compile "com.google.guava:guava:30.1.1-jre"
+    compile "com.github.haifengl:smile-plot:2.6.0"
 
     // Lombok
     compileOnly "org.projectlombok:lombok:1.18.16"

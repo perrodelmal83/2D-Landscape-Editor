@@ -2,21 +2,36 @@ package org.openrsc.editor;
 
 import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
 import org.openrsc.editor.model.Tile;
+import org.openrsc.editor.model.template.TerrainProperty;
 import org.openrsc.editor.model.template.TerrainTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TemplateUtil {
     public static TerrainTemplate merge(
             TerrainTemplate currentTemplate,
             TerrainTemplateUpdateEvent updateEvent
     ) {
-
+        Map<TerrainProperty, Integer> values;
         TerrainTemplate.TerrainTemplateBuilder builder;
         if (currentTemplate != null) {
+            values = new HashMap<>(currentTemplate.getValues());
             builder = currentTemplate.toBuilder();
         } else {
+            values = new HashMap<>(updateEvent.getTemplate().getValues());
             builder = TerrainTemplate.builder();
         }
-        updateEvent.getTemplate().getValues().forEach(builder::value);
+
+        updateEvent.getTemplate().getValues().forEach((key, value) -> {
+            if (value != null) {
+                values.put(key, value);
+            } else {
+                values.remove(key);
+            }
+        });
+        builder.clearValues();
+        builder.values(values);
         return builder.build();
     }
 

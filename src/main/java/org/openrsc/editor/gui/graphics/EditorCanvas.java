@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import org.openrsc.editor.TemplateUtil;
 import org.openrsc.editor.Util;
+import org.openrsc.editor.event.DisplayConfigurationUpdateEvent;
 import org.openrsc.editor.event.EditorToolSelectedEvent;
 import org.openrsc.editor.event.EventBusFactory;
 import org.openrsc.editor.event.TerrainPresetSelectedEvent;
@@ -11,11 +12,16 @@ import org.openrsc.editor.event.TerrainTemplateUpdateEvent;
 import org.openrsc.editor.gui.graphics.visitor.PathVisitor;
 import org.openrsc.editor.model.EditorTool;
 import org.openrsc.editor.model.Tile;
+import org.openrsc.editor.model.configuration.DisplayConfiguration;
+import org.openrsc.editor.model.configuration.DisplayConfigurationProperty;
 import org.openrsc.editor.model.template.TerrainTemplate;
+import smile.plot.swing.Contour;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -50,6 +56,7 @@ public class EditorCanvas extends Canvas implements Runnable {
     private BufferedImage offscreenImage;
     public static Graphics2D offscreenGraphics;
     private ToolDelegate currentToolDelegate;
+    private DisplayConfiguration displayConfiguration;
 
     // Controlled by tool delegates
     public TerrainTemplate currentTemplate = TerrainTemplate.builder().build();
@@ -62,6 +69,7 @@ public class EditorCanvas extends Canvas implements Runnable {
         this.stampToolDelegate = new StampToolDelegate(this);
         this.inspectToolDelegate = new InspectToolDelegate(this);
         this.placeDoorWindowDelegate = new PlaceDoorWindowDelegate(this);
+        this.displayConfiguration = DisplayConfiguration.DEFAULT_DISPLAY_CONFIGURATION;
 
         init();
         setCurrentTool(selectToolDelegate);
@@ -150,6 +158,10 @@ public class EditorCanvas extends Canvas implements Runnable {
             currentToolDelegate.render(offscreenGraphics);
         }
 
+        boolean displayContour = displayConfiguration.getProperties().get(DisplayConfigurationProperty.SHOW_CONTOUR);
+        if (displayContour && Util.STATE == Util.State.RENDER_READY) {
+            drawContour(offscreenImage);
+        }
         g2d.drawImage(offscreenImage, 0, 0, this);
     }
 
@@ -281,6 +293,24 @@ public class EditorCanvas extends Canvas implements Runnable {
         }
     }
 
+    private void drawContour(BufferedImage image) {
+        Graphics2D graphics2D = image.createGraphics();
+        double[][] elevationMap = new double[tileGrid.length][tileGrid.length];
+        for (int i = 0; i < tileGrid.length; i++) {
+            for (int j = 0; j < tileGrid.length; j++) {
+                elevationMap[j][i] = tileGrid[GRID_SIZE - i - 1][j].getGroundElevationInt() * 1.0;
+            }
+        }
+        int rule = AlphaComposite.SRC_OVER;
+        Composite comp = AlphaComposite.getInstance(rule, 0.2f);
+        graphics2D.setComposite(comp);
+
+        int size = TILE_SIZE * GRID_SIZE;
+        Contour.of(elevationMap).canvas().setLegendVisible(false).setMargin(0).paint(graphics2D, size, size);
+
+        graphics2D.dispose();
+    }
+
     protected Point snapPixelPointToGridPoint(Point pixelPoint) {
         int halfTileSize = TILE_SIZE / 2;
         Point p = new Point(pixelPoint.x - halfTileSize, pixelPoint.y + halfTileSize);
@@ -328,8 +358,10 @@ public class EditorCanvas extends Canvas implements Runnable {
         this.currentTemplate = event.getTemplate();
     }
 
-    public static int roundToNearest10(int num) {
-        float f = num / 10f;
-        return Math.round(f) * 10;
+    @Subscribe
+    public void onDisplayConfigurationChanged(DisplayConfigurationUpdateEvent event) {
+        DisplayConfiguration.DisplayConfigurationBuilder configBuilder = this.displayConfiguration.toBuilder();
+        event.getUpdatedProperties().forEach(configBuilder::property);
+        this.displayConfiguration = configBuilder.build();
     }
 }
