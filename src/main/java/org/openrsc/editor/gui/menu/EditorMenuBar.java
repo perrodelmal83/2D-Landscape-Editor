@@ -2,10 +2,9 @@ package org.openrsc.editor.gui.menu;
 
 import org.openrsc.editor.Actions;
 
-import javax.swing.*;
+import javax.swing.JMenuBar;
 
 public class EditorMenuBar extends JMenuBar {
-
     public EditorMenuBar() {
         super();
         this.add(
@@ -27,15 +26,16 @@ public class EditorMenuBar extends JMenuBar {
         );
 
         this.add(
-                new AdvancedMenu(
+                new ViewMenu(
                         Actions::onShowUnderground,
                         Actions::onShowGroundLevel,
                         Actions::onShowUpstairs,
                         Actions::onShowSecondStory,
-                        Actions::onJumpToCoords,
-                        Actions::toggleShowRoofs,
-                        Actions::toggleShowNpcs
+                        Actions::onJumpToCoords
                 )
         );
+
+        add(new SelectionMenu());
+        add(new PathMenu());
     }
 }

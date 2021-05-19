@@ -29,6 +29,17 @@ repositories {
 dependencies {
     compile "xpp3:xpp3:1.1.4c"
     compile "com.thoughtworks.xstream:xstream:1.4.9"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.12.2"
+
+    compile "com.google.guava:guava:30.1.1-jre"
+    compile "com.github.haifengl:smile-plot:2.6.0"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:1.18.16"
+    annotationProcessor "org.projectlombok:lombok:1.18.16"
+
+    testCompileOnly "org.projectlombok:lombok:1.18.16"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
 task copyJar(type: Copy) {

@@ -1,13 +1,14 @@
 package org.openrsc.editor;
 
-import javax.swing.*;
+import org.openrsc.editor.gui.MoveDirection;
+
+import javax.swing.JOptionPane;
 import java.io.File;
-import java.util.concurrent.CompletableFuture;
 
 public class Actions {
     // Open Landscape.
     public static void onOpenLandscape(File file) {
-        Util.ourFile = file;
+        Util.currentFile = file;
     }
 
     public static void onOpenSection() {
@@ -37,20 +38,9 @@ public class Actions {
     }
 
     public static void onCopy() {
-        Util.copiedTile = Util.selectedTile;
     }
 
     public static void onPaste() {
-        if (Util.copiedTile != null) {
-            Util.selectedTile.setDiagonalWalls(Util.copiedTile.getDiagonalWalls());
-            Util.selectedTile.setVerticalWall(Util.copiedTile.getVerticalWall());
-            Util.selectedTile.setHorizontalWall(Util.copiedTile.getHorizontalWall());
-            Util.selectedTile.setGroundElevation(Util.copiedTile.getGroundElevation());
-            Util.selectedTile.setGroundTexture(Util.copiedTile.getGroundTexture());
-            Util.selectedTile.setRoofTexture(Util.copiedTile.getRoofTexture());
-            Util.selectedTile.setGroundOverlay(Util.copiedTile.getGroundOverlay());
-            Util.STATE = Util.State.TILE_NEEDS_UPDATING;
-        }
     }
 
     public static void onShowUnderground() {
@@ -73,27 +63,10 @@ public class Actions {
         Util.handleJumpToCoords();
     }
 
-    public static CompletableFuture<Boolean> toggleShowNpcs() {
-        return attemptUpdate(Util::toggleShowNpcs).thenApply(unused -> Util.showNpcs);
-    }
-
-    public static CompletableFuture<Void> attemptUpdate(Runnable task) {
-        return CompletableFuture.runAsync(() -> {
-            if (Util.STATE == Util.State.RENDER_READY) {
-                task.run();
-                Util.STATE = Util.State.FORCE_FULL_RENDER;
-            }
-        });
-    }
-
-    public static CompletableFuture<Boolean> toggleShowRoofs() {
-        return attemptUpdate(Util::toggleShowRoofs).thenApply(unused -> Util.showRoofs);
-    }
-
     public static void changeSectorHeight(SectorHeight sectorHeight) {
-        int converted = sectorHeight.ordinal();
-        if (Util.sectorH != converted && Util.STATE == Util.State.RENDER_READY) {
-            Util.sectorH = converted;
+        int height = sectorHeight.getHeight();
+        if (Util.sectorH != height && Util.STATE == Util.State.RENDER_READY) {
+            Util.sectorH = height;
             Util.STATE = Util.State.CHANGING_SECTOR;
         }
     }
@@ -119,21 +92,25 @@ public class Actions {
     }
 
     public static void promptSaveIfChangesPresent() {
-        if (Util.sectorChanged
+        if (Util.sectorModified
                 && Util.tileArchive != null
                 && JOptionPane.showConfirmDialog(
                 null,
                 "Changes have been made to this Section\r\nDo you wish to save the current map?", "Saving", 0) == 0) {
             if (Util.save()) {
-                Util.sectorChanged = false;
+                Util.sectorModified = false;
             } else {
                 JOptionPane.showMessageDialog(
                         null,
-                        "Failed to saved to " + Util.ourFile.getPath()
+                        "Failed to saved to " + Util.currentFile.getPath()
                 );
             }
         } else {
-            Util.sectorChanged = false;
+            Util.sectorModified = false;
         }
+    }
+
+    public static void onOpenDataDir(File dir) {
+        Util.prepareData(dir);
     }
 }
