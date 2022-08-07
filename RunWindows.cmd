@@ -1,1 +1,1 @@
-java -jar Landscape_Editor.jar
+java -jar 2D-Landscape.jar
