@@ -1,4 +1,4 @@
-## 2D RSC Landscape Editor
+##lobocallejero Editor
 
 Released under the General Public License v2. Completely freeware.
 
